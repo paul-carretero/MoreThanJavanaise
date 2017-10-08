@@ -49,6 +49,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 *  Allocate a NEW JVN object id (usually allocated to a newly created JVN object)
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
+	@Override
 	public int jvnGetObjectId() throws java.rmi.RemoteException,jvn.JvnException {
 		return this.currentOjectId.getAndIncrement();
 	}
@@ -61,6 +62,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @param js  : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
+	@Override
 	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
 		this.jvnObject.put(jo, jon, js);
 	}
@@ -71,6 +73,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @param js : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
+	@Override
 	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
 		return this.jvnObject.get(jon);
 	}
@@ -82,6 +85,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
+	@Override
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
 		AtomicInteger ww = this.waitingWriters.get(joi);
 		if(ww != null && ww.get() > 1) {
@@ -108,6 +112,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
+	@Override
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
 		
 		if(this.waitingWriters.get(joi) == null) {
@@ -141,6 +146,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @param js  : the remote reference of the server
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
+	@Override
 	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
 		this.jvnObject.cleanUpServer(js);
 	}

@@ -6,8 +6,8 @@ import java.util.Map;
 public class JvnObjectMap {
 
 
-	protected final Map<String, JvnObject> LocalsJvnObject;
-	protected final Map<Integer,String> assocMap;
+	protected Map<String, JvnObject> LocalsJvnObject;
+	protected Map<Integer,String> assocMap;
 
 	public JvnObjectMap() {
 		this.LocalsJvnObject	= new HashMap<String, JvnObject>();

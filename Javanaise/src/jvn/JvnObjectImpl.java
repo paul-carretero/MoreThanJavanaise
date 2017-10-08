@@ -35,6 +35,7 @@ public class JvnObjectImpl implements JvnObject {
 		this.waitingServers		= this.threadLock.newCondition();
 	}
 
+	@Override
 	public void jvnLockRead() throws JvnException {
 		this.threadLock.lock();
 		switch (this.lock) {
@@ -64,6 +65,7 @@ public class JvnObjectImpl implements JvnObject {
 		this.threadLock.unlock();
 	}
 
+	@Override
 	public void jvnLockWrite() throws JvnException {
 		this.threadLock.lock();
 		switch (this.lock) {
@@ -95,6 +97,7 @@ public class JvnObjectImpl implements JvnObject {
 		this.threadLock.unlock();
 	}
 
+	@Override
 	public void jvnUnLock() throws JvnException {
 		this.threadLock.lock();
 		switch (this.lock) {
@@ -113,10 +116,12 @@ public class JvnObjectImpl implements JvnObject {
 		this.threadLock.unlock();
 	}
 
+	@Override
 	public int jvnGetObjectId() throws JvnException {
 		return this.jvnObjectId;
 	}
 
+	@Override
 	public void jvnInvalidateReader() throws JvnException {
 		this.threadLock.lock();
 		try {
@@ -133,6 +138,7 @@ public class JvnObjectImpl implements JvnObject {
 		}
 	}
 
+	@Override
 	public Serializable jvnInvalidateWriter() throws JvnException {
 		this.threadLock.lock();
 		try {
@@ -150,6 +156,7 @@ public class JvnObjectImpl implements JvnObject {
 		return this.serializableObject;
 	}
 
+	@Override
 	public Serializable jvnInvalidateWriterForReader() throws JvnException {
 		this.threadLock.lock();
 		try {
@@ -172,10 +179,12 @@ public class JvnObjectImpl implements JvnObject {
 		return this.serializableObject;
 	}
 
+	@Override
 	synchronized public Serializable jvnGetObjectState() throws JvnException {
 		return this.serializableObject;
 	}
 	
+	@Override
 	synchronized public void setSerializableObject(Serializable o) {
 		this.serializableObject = o;
 	}

@@ -101,6 +101,7 @@ class readListener implements ActionListener {
 	/**
 	 * Management of user events
 	 **/
+	@Override
 	public void actionPerformed (ActionEvent e) {
 		try {
 			// lock the object in read mode
@@ -134,6 +135,7 @@ class writeListener implements ActionListener {
 	/**
 	 * Management of user events
 	 **/
+	@Override
 	public void actionPerformed (ActionEvent e) {
 		try {	
 			// get the value to be written from the buffer
