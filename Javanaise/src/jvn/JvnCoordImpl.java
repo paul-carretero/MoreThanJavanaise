@@ -11,6 +11,8 @@ package jvn;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -19,10 +21,9 @@ import java.net.MalformedURLException;
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 
 	private static final long 	serialVersionUID = 1L;
-	private static final int	MAX_WAITING_WRITERS = 2;
 	private static final String HOST = "//localhost/";
 	private final AtomicInteger currentOjectId;
-	private final AtomicInteger waitingWriters;
+	private final Map<Integer,AtomicInteger> waitingWriters;
 	
 	/**
 	 * Ensemble Objets JVN stockés
@@ -40,8 +41,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		super();
 		Naming.rebind(HOST+"JvnCoord", this);
 		this.currentOjectId = new AtomicInteger();
-		this.waitingWriters = new AtomicInteger();
-		this.jvnObject = new JvnObjectMapCoord();
+		this.waitingWriters = new HashMap<Integer,AtomicInteger>();
+		this.jvnObject 		= new JvnObjectMapCoord();
 	}
 
 	/**
@@ -82,8 +83,9 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		while(this.waitingWriters.get() > MAX_WAITING_WRITERS) {
-			synchronized(this) {
+		AtomicInteger ww = this.waitingWriters.get(joi);
+		if(ww != null && ww.get() > 1) {
+			synchronized (ww) {
 				try {
 					this.wait();
 				} catch (InterruptedException e) {
@@ -107,7 +109,15 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		this.waitingWriters.incrementAndGet();
+		
+		if(this.waitingWriters.get(joi) == null) {
+			this.waitingWriters.put(joi, new AtomicInteger(1));
+		}
+		else {
+			this.waitingWriters.get(joi).incrementAndGet();
+		}
+		
+		
 		if(!this.jvnObject.getWritingServer(joi).equals(js)) {
 			this.jvnObject.get(joi).setSerializableObject(this.jvnObject.getWritingServer(joi).jvnInvalidateWriter(joi));
 		}
@@ -118,10 +128,9 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		}
 		this.jvnObject.setWritingServer(joi, js);
 		
-		if (this.waitingWriters.decrementAndGet() <= MAX_WAITING_WRITERS) {
-			synchronized (this) {
-				this.notifyAll();
-			}
+		synchronized (this.waitingWriters.get(joi)) {
+			this.waitingWriters.get(joi).decrementAndGet();
+			this.notifyAll();
 		}
 		
 		return this.jvnObject.get(joi).jvnGetObjectState();
