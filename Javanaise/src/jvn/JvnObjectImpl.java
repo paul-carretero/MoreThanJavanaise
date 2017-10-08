@@ -1,6 +1,9 @@
 package jvn;
 
 import java.io.Serializable;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class JvnObjectImpl implements JvnObject {
 
@@ -8,6 +11,9 @@ public class JvnObjectImpl implements JvnObject {
 
 	private final int 		jvnObjectId;
 	private Serializable	serializableObject;
+	
+	private final Lock threadLock;
+	private final Condition waitingServers;
 
 	private static final JvnLocalServer LOCAL_SERVER = JvnServerImpl.jvnGetServer();
 
@@ -25,9 +31,12 @@ public class JvnObjectImpl implements JvnObject {
 		this.serializableObject	= serializableObject;
 		this.jvnObjectId 		= jvnObjectId;
 		this.lock				= LockState.WRITE;
+		this.threadLock			= new ReentrantLock();
+		this.waitingServers		= this.threadLock.newCondition();
 	}
 
-	synchronized public void jvnLockRead() throws JvnException {
+	public void jvnLockRead() throws JvnException {
+		this.threadLock.lock();
 		switch (this.lock) {
 		case NOLOCK:
 			this.serializableObject = LOCAL_SERVER.jvnLockRead(this.jvnGetObjectId());
@@ -52,9 +61,11 @@ public class JvnObjectImpl implements JvnObject {
 			// lol?
 			break;
 		}
+		this.threadLock.unlock();
 	}
 
-	synchronized public void jvnLockWrite() throws JvnException {
+	public void jvnLockWrite() throws JvnException {
+		this.threadLock.lock();
 		switch (this.lock) {
 		case NOLOCK:
 			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
@@ -81,9 +92,11 @@ public class JvnObjectImpl implements JvnObject {
 			// lol?
 			break;
 		}
+		this.threadLock.unlock();
 	}
 
-	synchronized public void jvnUnLock() throws JvnException {
+	public void jvnUnLock() throws JvnException {
+		this.threadLock.lock();
 		switch (this.lock) {
 		case READ:
 			this.lock = LockState.READCACHED;
@@ -97,64 +110,72 @@ public class JvnObjectImpl implements JvnObject {
 		default:
 			this.lock = LockState.NOLOCK;
 		}
-		this.notifyAll();
+		this.threadLock.unlock();
 	}
 
 	public int jvnGetObjectId() throws JvnException {
 		return this.jvnObjectId;
 	}
 
-	public Serializable jvnGetObjectState() throws JvnException {
+	public void jvnInvalidateReader() throws JvnException {
+		this.threadLock.lock();
+		try {
+			while(this.lock == LockState.READ) {
+				this.waitingServers.await();
+			}
+			this.lock = LockState.NOLOCK;
+			this.waitingServers.signalAll();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		finally {
+			this.threadLock.unlock();
+		}
+	}
+
+	public Serializable jvnInvalidateWriter() throws JvnException {
+		this.threadLock.lock();
+		try {
+			while(this.lock == LockState.WRITE) {
+				this.waitingServers.await();
+			}
+			this.lock = LockState.NOLOCK;
+			this.waitingServers.signalAll();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		finally {
+			this.threadLock.unlock();
+		}
 		return this.serializableObject;
 	}
 
-	synchronized public void jvnInvalidateReader() throws JvnException {
-		while(this.lock == LockState.READ) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+	public Serializable jvnInvalidateWriterForReader() throws JvnException {
+		this.threadLock.lock();
+		try {
+			while(this.lock == LockState.WRITE) {
+				this.waitingServers.await();
 			}
-		}
-		this.lock = LockState.NOLOCK;
-
-		this.notifyAll();
-	}
-
-	synchronized public Serializable jvnInvalidateWriter() throws JvnException {
-		while(this.lock == LockState.WRITE) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			if (this.lock == LockState.WRITECACHED) {
+				this.lock = LockState.READCACHED;
 			}
+			else if (this.lock == LockState.WRITECACHEDREAD) {
+				this.lock = LockState.READ;
+			}
+			this.waitingServers.signalAll();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		this.lock = LockState.NOLOCK;
-
-		this.notifyAll();
+		finally {
+			this.threadLock.unlock();
+		}
 		return this.serializableObject;
 	}
 
-	synchronized public Serializable jvnInvalidateWriterForReader() throws JvnException {
-		while(this.lock == LockState.WRITE) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-
-		if (this.lock == LockState.WRITECACHED) {
-			this.lock = LockState.READCACHED;
-		}
-		else if (this.lock == LockState.WRITECACHEDREAD) {
-			this.lock = LockState.READ;
-		}
-
-		this.notifyAll();
+	synchronized public Serializable jvnGetObjectState() throws JvnException {
 		return this.serializableObject;
 	}
-
+	
 	synchronized public void setSerializableObject(Serializable o) {
 		this.serializableObject = o;
 	}

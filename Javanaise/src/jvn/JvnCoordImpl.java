@@ -18,9 +18,11 @@ import java.net.MalformedURLException;
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 
-	private static final long serialVersionUID = 1L;
+	private static final long 	serialVersionUID = 1L;
+	private static final int	MAX_WAITING_WRITERS = 2;
 	private static final String HOST = "//localhost/";
-	private AtomicInteger currentOjectId;
+	private final AtomicInteger currentOjectId;
+	private final AtomicInteger waitingWriters;
 	
 	/**
 	 * Ensemble Objets JVN stockés
@@ -38,6 +40,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		super();
 		Naming.rebind(HOST+"JvnCoord", this);
 		this.currentOjectId = new AtomicInteger();
+		this.waitingWriters = new AtomicInteger();
 		this.jvnObject = new JvnObjectMapCoord();
 	}
 
@@ -79,6 +82,16 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
+		while(this.waitingWriters.get() > MAX_WAITING_WRITERS) {
+			synchronized(this) {
+				try {
+					this.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		if(!this.jvnObject.getWritingServer(joi).equals(js)) {
 			this.jvnObject.get(joi).setSerializableObject(this.jvnObject.getWritingServer(joi).jvnInvalidateWriterForReader(joi));
 		}
@@ -94,6 +107,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
+		this.waitingWriters.incrementAndGet();
 		if(!this.jvnObject.getWritingServer(joi).equals(js)) {
 			this.jvnObject.get(joi).setSerializableObject(this.jvnObject.getWritingServer(joi).jvnInvalidateWriter(joi));
 		}
@@ -103,6 +117,13 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 			}
 		}
 		this.jvnObject.setWritingServer(joi, js);
+		
+		if (this.waitingWriters.decrementAndGet() <= MAX_WAITING_WRITERS) {
+			synchronized (this) {
+				this.notifyAll();
+			}
+		}
+		
 		return this.jvnObject.get(joi).jvnGetObjectState();
 	}
 
