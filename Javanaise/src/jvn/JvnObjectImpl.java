@@ -155,4 +155,8 @@ public class JvnObjectImpl implements JvnObject {
 		return this.serializableObject;
 	}
 
+	synchronized public void setSerializableObject(Serializable o) {
+		this.serializableObject = o;
+	}
+
 }

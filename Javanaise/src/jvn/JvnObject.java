@@ -68,4 +68,10 @@ public interface JvnObject extends Serializable {
 	 * @throws JvnException
 	 **/
 	public Serializable jvnInvalidateWriterForReader() throws jvn.JvnException;	
+	
+	/**
+	 * met à jour un l'objet application encapsule dans un JvnObject
+	 * @param o un objet serializable
+	 */
+	public void setSerializableObject(Serializable o);
 }

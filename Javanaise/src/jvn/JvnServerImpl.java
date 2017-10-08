@@ -184,7 +184,9 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
-		return this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
+		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
+		this.LocalsJvnObject.get(joi).setSerializableObject(o);
+		return o;
 	};
 
 	/**
@@ -194,7 +196,9 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
-		return this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
+		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
+		this.LocalsJvnObject.get(joi).setSerializableObject(o);
+		return o;
 	};
 
 }
