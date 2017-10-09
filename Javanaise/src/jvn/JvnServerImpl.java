@@ -79,6 +79,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public void jvnTerminate() throws jvn.JvnException {
+		Shared.log("JvnServImpl","jvnTerminate ");
 		try {
 			this.jvnRemoteCoord.jvnTerminate(this);
 		} catch (RemoteException e) {
@@ -94,6 +95,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException { 
+		Shared.log("JvnServImpl","jvnCreateObject ");
 		try {
 			return new JvnObjectImpl(this.jvnRemoteCoord.jvnGetObjectId(), o);
 		} catch (RemoteException e) {
@@ -110,6 +112,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
+		Shared.log("JvnServImpl","jvnRegisterObject");
 		try {
 			this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
 			this.LocalsJvnObject.put(jo, jon, this);
@@ -127,12 +130,17 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	synchronized public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
+		Shared.log("JvnServImpl","jvnLookupObject" + jon);
 		JvnObject jvnObj = this.LocalsJvnObject.get(jon);
 		if (jvnObj != null){
 			return jvnObj;
 		}
 		try {
-			return this.jvnRemoteCoord.jvnLookupObject(jon, this);
+			JvnObject jo = this.jvnRemoteCoord.jvnLookupObject(jon, this);
+			if(jo != null) {
+				this.LocalsJvnObject.put(jo, jon, this);
+			}
+			return jo;
 		} catch (RemoteException e) {
 			e.printStackTrace();
 			throw new JvnException("Error in Object Lookup");
@@ -147,6 +155,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public Serializable jvnLockRead(int joi) throws JvnException {
+		Shared.log("JvnServImpl","jvnLookupObject" + joi);
 		try {
 			return this.jvnRemoteCoord.jvnLockRead(joi, this);
 		} catch (RemoteException e) {
@@ -163,6 +172,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public Serializable jvnLockWrite(int joi) throws JvnException {
+		Shared.log("JvnServImpl","jvnLockWrite " + joi);
 		try {
 			return this.jvnRemoteCoord.jvnLockWrite(joi, this);
 		} catch (RemoteException e) {
@@ -181,8 +191,9 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException,jvn.JvnException {
+		Shared.log("JvnServImpl","jvnInvalidateReader " + joi);
 		this.LocalsJvnObject.get(joi).jvnInvalidateReader();
-	};
+	}
 
 	/**
 	 * Invalidate the Write lock of the JVN object identified by id 
@@ -192,10 +203,11 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
+		Shared.log("JvnServImpl","jvnInvalidateWriter " + joi);
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
-	};
+	}
 
 	/**
 	 * Reduce the Write lock of the JVN object identified by id 
@@ -205,19 +217,20 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
+		Shared.log("JvnServImpl","jvnInvalidateWriterForReader " + joi);
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
 	}
 
 	public void invalideKey(int intKey) {
+		Shared.log("JvnServImpl","invalideKey " + intKey);
 		try {
 			this.jvnRemoteCoord.invalidateKey(intKey,this);
 		} catch (RemoteException | JvnException e) {
 			e.printStackTrace();
 		}
-	};
-
+	}
 }
 
 

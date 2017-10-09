@@ -76,4 +76,6 @@ public interface JvnObject extends Serializable {
 	public void setSerializableObject(Serializable o);
 	
 	public boolean isFreeOfLock();
+
+	public void newLock();
 }

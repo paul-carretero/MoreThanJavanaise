@@ -25,7 +25,7 @@ public class JvnObjectImpl implements JvnObject {
 		READ,
 		WRITE,
 		WRITECACHEDREAD;
-	};
+	}
 
 	public JvnObjectImpl(int jvnObjectId, Serializable serializableObject) {
 		this.serializableObject	= serializableObject;
@@ -37,6 +37,7 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	public void jvnLockRead() throws JvnException {
+		Shared.log("JvnObjectImpl","jvnLockRead " + this.lock);
 		this.threadLock.lock();
 		switch (this.lock) {
 		case NOLOCK:
@@ -59,7 +60,7 @@ public class JvnObjectImpl implements JvnObject {
 			// do nothing
 			break;
 		default:
-			// lol?
+			// impossible
 			break;
 		}
 		this.threadLock.unlock();
@@ -67,6 +68,7 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	public void jvnLockWrite() throws JvnException {
+		Shared.log("JvnObjectImpl","jvnLockWrite " + this.lock);
 		this.threadLock.lock();
 		switch (this.lock) {
 		case NOLOCK:
@@ -91,7 +93,7 @@ public class JvnObjectImpl implements JvnObject {
 			this.lock = LockState.WRITE;
 			break;
 		default:
-			// lol?
+			// impossible
 			break;
 		}
 		this.threadLock.unlock();
@@ -99,6 +101,7 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	public void jvnUnLock() throws JvnException {
+		Shared.log("JvnObjectImpl","jvnUnLock ");
 		this.threadLock.lock();
 		switch (this.lock) {
 		case READ:
@@ -113,6 +116,14 @@ public class JvnObjectImpl implements JvnObject {
 		default:
 			this.lock = LockState.NOLOCK;
 		}
+		this.waitingServers.signalAll();
+		this.threadLock.unlock();
+	}
+	
+	@Override
+	public void newLock() {
+		this.threadLock.lock();
+		this.lock = LockState.NOLOCK;
 		this.threadLock.unlock();
 	}
 
@@ -193,5 +204,4 @@ public class JvnObjectImpl implements JvnObject {
 	public boolean isFreeOfLock() {
 		return this.lock == LockState.NOLOCK || this.lock == LockState.READCACHED || this.lock == LockState.WRITECACHED;
 	}
-
 }

@@ -9,9 +9,6 @@ package irc;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.net.MalformedURLException;
-import java.rmi.RemoteException;
-
 import jvn.*;
 
 
@@ -28,25 +25,12 @@ public class Irc {
 	 **/
 	public static void main(String argv[]) {
 		try {
-			new JvnCoordImpl();
-		} catch (RemoteException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (JvnException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		try {
 			// initialize JVN
 			JvnServerImpl js = JvnServerImpl.jvnGetServer();
 
 			// look up the IRC object in the JVN server
 			// if not found, create it, and register it in the JVN server
 			JvnObject jo = js.jvnLookupObject("IRC");
-
 			if (jo == null) {
 				jo = js.jvnCreateObject(new Sentence());
 				// after creation, I have a write lock on the object
@@ -57,6 +41,7 @@ public class Irc {
 			new Irc(jo);
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println("IRC problem : " + e.getMessage());
 		}
 	}
@@ -84,6 +69,13 @@ public class Irc {
 		this.frame.setSize(545,201);
 		this.text.setBackground(Color.black); 
 		this.frame.setVisible(true);
+		this.frame.addWindowListener(new WindowAdapter() {
+	        @Override
+			public void windowClosing(WindowEvent we) {
+	            System.exit(42);
+	         }
+	     }
+	);
 	}
 }
 
