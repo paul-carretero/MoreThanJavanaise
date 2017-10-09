@@ -60,13 +60,16 @@ public class Irc {
 		this.frame.add(this.text);
 		this.data=new TextField(40);
 		this.frame.add(this.data);
-		Button read_button = new Button("read");
+		Button read_button = new Button("read and readlock");
 		read_button.addActionListener(new readListener(this));
 		this.frame.add(read_button);
-		Button write_button = new Button("write");
+		Button write_button = new Button("write and writelock");
 		write_button.addActionListener(new writeListener(this));
 		this.frame.add(write_button);
-		this.frame.setSize(545,201);
+		Button unlock_button = new Button("unlock");
+		unlock_button.addActionListener(new unlockListener(this));
+		this.frame.add(unlock_button);
+		this.frame.setSize(700,200);
 		this.text.setBackground(Color.black); 
 		this.frame.setVisible(true);
 		this.frame.addWindowListener(new WindowAdapter() {
@@ -103,11 +106,32 @@ class readListener implements ActionListener {
 			String s = ((Sentence)(this.irc.sentence.jvnGetObjectState())).read();
 
 			// unlock the object
-			this.irc.sentence.jvnUnLock();
+			//this.irc.sentence.jvnUnLock();
 
 			// display the read value
 			this.irc.data.setText(s);
 			this.irc.text.append(s+"\n");
+		} catch (JvnException je) {
+			System.out.println("IRC problem : " + je.getMessage());
+		}
+	}
+}
+
+class unlockListener implements ActionListener {
+	Irc irc;
+
+	public unlockListener (Irc i) {
+		this.irc = i;
+	}
+
+	/**
+	 * Management of user events
+	 **/
+	@Override
+	public void actionPerformed (ActionEvent e) {
+		try {
+			// unlock the object
+			this.irc.sentence.jvnUnLock();
 		} catch (JvnException je) {
 			System.out.println("IRC problem : " + je.getMessage());
 		}
@@ -140,7 +164,7 @@ class writeListener implements ActionListener {
 			((Sentence)(this.irc.sentence.jvnGetObjectState())).write(s);
 
 			// unlock the object
-			this.irc.sentence.jvnUnLock();
+			//this.irc.sentence.jvnUnLock();
 		} catch (JvnException je) {
 			System.out.println("IRC problem  : " + je.getMessage());
 		}
