@@ -74,4 +74,15 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		    server.remove(js);
 		}
 	}
+
+	public void cleanUpKey(int key, JvnServerImpl js) {
+		Set<JvnRemoteServer> readingServerOnKey = this.readingServer.get(key);
+		if(readingServerOnKey != null) {
+			readingServerOnKey.remove(js);
+		}
+	
+		if(this.writingServer.get(key) == js) {
+			this.writingServer.remove(key);
+		}
+	}
 }

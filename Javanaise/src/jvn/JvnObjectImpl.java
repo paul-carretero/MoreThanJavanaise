@@ -189,4 +189,9 @@ public class JvnObjectImpl implements JvnObject {
 		this.serializableObject = o;
 	}
 
+	@Override
+	public boolean isFreeOfLock() {
+		return this.lock == LockState.NOLOCK || this.lock == LockState.READCACHED || this.lock == LockState.WRITECACHED;
+	}
+
 }

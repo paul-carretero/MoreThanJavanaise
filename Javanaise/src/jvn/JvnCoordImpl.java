@@ -150,6 +150,11 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
 		this.jvnObject.cleanUpServer(js);
 	}
+
+	//@Override
+	public void invalidateKey(int key, JvnServerImpl js) {
+		this.jvnObject.cleanUpKey(key,js);
+	}
 }
 
 

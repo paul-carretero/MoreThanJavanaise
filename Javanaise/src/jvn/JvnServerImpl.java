@@ -208,6 +208,14 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
+	}
+
+	public void invalideKey(int intKey) {
+		try {
+			this.jvnRemoteCoord.invalidateKey(intKey,this);
+		} catch (RemoteException | JvnException e) {
+			e.printStackTrace();
+		}
 	};
 
 }

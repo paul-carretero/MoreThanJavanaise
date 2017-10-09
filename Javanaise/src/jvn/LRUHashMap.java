@@ -4,11 +4,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LRUHashMap<V> extends ConcurrentHashMap<String,V> {
+public class LRUHashMap extends ConcurrentHashMap<String,JvnObject> {
 	
 	private static final long serialVersionUID = 1L;
 	private final SortedSet<TimedKey> LRUQueue;
-	private final int CacheSize;
+	private final int CacheSize; 
 
 	public LRUHashMap(int size) {
 		super();
@@ -17,9 +17,8 @@ public class LRUHashMap<V> extends ConcurrentHashMap<String,V> {
 	}
 	
 	@SuppressWarnings("unlikely-arg-type")
-	public V get(String key) {
-		System.out.println("lol?");
-		V value = super.get(key);
+	public JvnObject get(String key) {
+		JvnObject value = super.get(key);
 		if(value != null) {
 			this.LRUQueue.remove(key);
 			this.LRUQueue.add(new TimedKey(key));
@@ -29,16 +28,28 @@ public class LRUHashMap<V> extends ConcurrentHashMap<String,V> {
 	
 	@Override
 	@SuppressWarnings("unlikely-arg-type")
-	public V put(String key, V value ) {
+	public JvnObject put(String key, JvnObject value ) {
 		super.put(key,value);
-		System.out.println("lolV2?");
 		this.LRUQueue.remove(key);
 		this.LRUQueue.add(new TimedKey(key));
 		
-		if(this.CacheSize < this.size()) {
+		while(this.size() > this.CacheSize) {
 			String keyToRemove = this.LRUQueue.first().getKey();
-			this.remove(keyToRemove);
+			JvnObject toTest = this.get(keyToRemove);
 			this.LRUQueue.remove(keyToRemove);
+			if(toTest == null || !toTest.isFreeOfLock() ) {
+				this.LRUQueue.add(new TimedKey(keyToRemove));
+			}
+			else {
+				int intKey = -1;
+				try {
+					intKey = toTest.jvnGetObjectId();
+				} catch (JvnException e) {
+					e.printStackTrace();
+				}
+				this.remove(keyToRemove);
+				JvnServerImpl.jvnGetServer().invalideKey(intKey);
+			}
 		}
 		return value;
 	}
