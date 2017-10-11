@@ -34,7 +34,7 @@ public class TimedKey_Test {
 		assertTrue("oldTk est plus vieux que tk2", oldTk.compareTo(tk2) > 0);
 	}
 	
-	@SuppressWarnings({ "unlikely-arg-type", "static-method" })
+	@SuppressWarnings({ "static-method" })
 	@Test
 	public void EqualTest() throws InterruptedException {
 		TimedKey tk1 = new TimedKey("tk1");
@@ -44,7 +44,6 @@ public class TimedKey_Test {
 		TimedKey tk2 = new TimedKey("tk2");
 		assertTrue("tk1 == tk1bis", tk1.equals(tk1bis));
 		assertFalse("tk1 != tk2", tk1.equals(tk2));
-		assertTrue("tk1 == 'tk1' \0/", tk1.equals("tk1"));
 	}
 
 }

@@ -78,7 +78,7 @@ public class JvnObjectConcurrency_Test {
 	}
 
 	@Test(timeout=10000)
-	public void localConcurrencyTest() throws InterruptedException, JvnException {
+	public void localConcurrencyTest() throws JvnException {
 		List<Thread> runnableList = new LinkedList<Thread>();
 		for (int i = 0; i < NUM_THREAD; i++) {
 			runnableList.add(new JvnObjectWorker(i));

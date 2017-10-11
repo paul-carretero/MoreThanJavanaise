@@ -1,10 +1,10 @@
 package jvn;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JvnObjectMapCoord extends JvnObjectMap{
 
@@ -13,8 +13,8 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 
 	public JvnObjectMapCoord() {
 		super();
-		this.readingServer		= new HashMap<Integer, Set<JvnRemoteServer>>();
-		this.writingServer		= new HashMap<Integer, JvnRemoteServer>();
+		this.readingServer		= new ConcurrentHashMap<Integer, Set<JvnRemoteServer>>();
+		this.writingServer		= new ConcurrentHashMap<Integer, JvnRemoteServer>();
 	}
 
 	/**
