@@ -19,27 +19,27 @@ import java.io.*;
 public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer, JvnRemoteServer{
 
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * Emplacement du registre RMI
 	 */
 	private static final String HOST = "localhost";
-	
+
 	/**
 	 * A JVN server is managed as a singleton 
 	 */
 	private static JvnServerImpl js = null;
-	
+
 	/**
 	 * Référence vers le Coordinateur
 	 */
 	private JvnRemoteCoord jvnRemoteCoord;
-	
+
 	/**
 	 * "Cache" des objets JVN stockés localements
 	 */
 	private JvnObjectMap LocalsJvnObject;
-	
+
 	/**
 	 * Référence vers le registre RMI
 	 */
@@ -49,11 +49,17 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * Default constructor
 	 * @throws JvnException
 	 **/
-	private JvnServerImpl() throws Exception {
+	private JvnServerImpl(final boolean localOnly) throws Exception {
 		super();
 		this.LocalsJvnObject	= new JvnObjectMapServ();
-		this.rmiRegistry		= LocateRegistry.getRegistry(HOST);
-		this.jvnRemoteCoord 	= (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord");
+		if(localOnly) {
+			this.rmiRegistry		= null;
+			this.jvnRemoteCoord 	= null;
+		}
+		else {
+			this.rmiRegistry		= LocateRegistry.getRegistry(HOST);
+			this.jvnRemoteCoord 	= (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord");
+		}
 	}
 
 	/**
@@ -64,10 +70,13 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	public static JvnServerImpl jvnGetServer() {
 		if (js == null){
 			try {
-				js = new JvnServerImpl();
+				js = new JvnServerImpl(false);
 			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
+				try {
+					js = new JvnServerImpl(true);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
 			}
 		}
 		return js;
@@ -94,7 +103,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws JvnException
 	 **/
 	@Override
-	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException { 
+	public JvnObject jvnCreateObject(final Serializable o) throws jvn.JvnException { 
 		Shared.log("JvnServImpl","jvnCreateObject ");
 		try {
 			return new JvnObjectImpl(this.jvnRemoteCoord.jvnGetObjectId(), o);
@@ -111,14 +120,16 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws JvnException
 	 **/
 	@Override
-	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
-		Shared.log("JvnServImpl","jvnRegisterObject");
-		try {
-			this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
-			this.LocalsJvnObject.put(jo, jon, this);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			throw new JvnException("Erreur lors de l'enregistrement de l'objet");
+	public void jvnRegisterObject(final String jon, final JvnObject jo) throws jvn.JvnException {
+		synchronized (jon.intern()) {
+			Shared.log("JvnServImpl","jvnRegisterObject");
+			try {
+				this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
+				this.LocalsJvnObject.put(jo, jon, this);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+				throw new JvnException("Erreur lors de l'enregistrement de l'objet");
+			}
 		}
 	}
 
@@ -129,21 +140,23 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws JvnException
 	 **/
 	@Override
-	synchronized public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
-		Shared.log("JvnServImpl","jvnLookupObject" + jon);
-		JvnObject jvnObj = this.LocalsJvnObject.get(jon);
-		if (jvnObj != null){
-			return jvnObj;
-		}
-		try {
-			JvnObject jo = this.jvnRemoteCoord.jvnLookupObject(jon, this);
-			if(jo != null) {
-				this.LocalsJvnObject.put(jo, jon, this);
+	public JvnObject jvnLookupObject(final String jon) throws jvn.JvnException {
+		synchronized (jon.intern()) {
+			Shared.log("JvnServImpl","jvnLookupObject" + jon);
+			JvnObject jvnObj = this.LocalsJvnObject.get(jon);
+			if (jvnObj != null){
+				return jvnObj;
 			}
-			return jo;
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			throw new JvnException("Error in Object Lookup");
+			try {
+				JvnObject jo = this.jvnRemoteCoord.jvnLookupObject(jon, this);
+				if(jo != null) {
+					this.LocalsJvnObject.put(jo, jon, this);
+				}
+				return jo;
+			} catch (RemoteException e) {
+				e.printStackTrace();
+				throw new JvnException("Error in Object Lookup");
+			}
 		}
 	}	
 
@@ -154,7 +167,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws  JvnException
 	 **/
 	@Override
-	public Serializable jvnLockRead(int joi) throws JvnException {
+	public Serializable jvnLockRead(final int joi) throws JvnException {
 		Shared.log("JvnServImpl","jvnLookupObject" + joi);
 		try {
 			return this.jvnRemoteCoord.jvnLockRead(joi, this);
@@ -171,7 +184,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws  JvnException
 	 **/
 	@Override
-	public Serializable jvnLockWrite(int joi) throws JvnException {
+	public Serializable jvnLockWrite(final int joi) throws JvnException {
 		Shared.log("JvnServImpl","jvnLockWrite " + joi);
 		try {
 			return this.jvnRemoteCoord.jvnLockWrite(joi, this);
@@ -190,7 +203,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException,jvn.JvnException {
+	public void jvnInvalidateReader(final int joi) throws java.rmi.RemoteException,jvn.JvnException {
 		Shared.log("JvnServImpl","jvnInvalidateReader " + joi);
 		this.LocalsJvnObject.get(joi).jvnInvalidateReader();
 	}
@@ -216,14 +229,14 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
+	public Serializable jvnInvalidateWriterForReader(final int joi) throws java.rmi.RemoteException,jvn.JvnException { 
 		Shared.log("JvnServImpl","jvnInvalidateWriterForReader " + joi);
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
 	}
 
-	public void invalideKey(int intKey) {
+	public void invalideKey(final int intKey) {
 		Shared.log("JvnServImpl","invalideKey " + intKey);
 		try {
 			this.jvnRemoteCoord.invalidateKey(intKey,this);

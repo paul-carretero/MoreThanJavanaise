@@ -18,7 +18,7 @@ public class JvnObjectImpl implements JvnObject {
 	private static final JvnLocalServer LOCAL_SERVER = JvnServerImpl.jvnGetServer();
 
 	private LockState lock;
-	private enum LockState{
+	public enum LockState{
 		NOLOCK,
 		READCACHED,
 		WRITECACHED,
@@ -33,6 +33,14 @@ public class JvnObjectImpl implements JvnObject {
 		this.lock				= LockState.WRITE;
 		this.threadLock			= new ReentrantLock();
 		this.waitingServers		= this.threadLock.newCondition();
+	}
+	
+	public LockState jvngetLock() {
+		this.threadLock.lock();
+		LockState l = this.lock;
+		this.threadLock.unlock();
+		return l;
+		
 	}
 
 	@Override
@@ -107,6 +115,12 @@ public class JvnObjectImpl implements JvnObject {
 		case READ:
 			this.lock = LockState.READCACHED;
 			break;
+		case READCACHED:
+			this.lock = LockState.READCACHED;
+			break;
+		case WRITECACHED:
+			this.lock = LockState.WRITECACHED;
+			break;
 		case WRITE:
 			this.lock = LockState.WRITECACHED;
 			break;
@@ -116,7 +130,7 @@ public class JvnObjectImpl implements JvnObject {
 		default:
 			this.lock = LockState.NOLOCK;
 		}
-		this.waitingServers.signalAll();
+		this.waitingServers.signal();
 		this.threadLock.unlock();
 	}
 	
@@ -140,7 +154,7 @@ public class JvnObjectImpl implements JvnObject {
 				this.waitingServers.await();
 			}
 			this.lock = LockState.NOLOCK;
-			this.waitingServers.signalAll();
+			this.waitingServers.signal();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -157,7 +171,7 @@ public class JvnObjectImpl implements JvnObject {
 				this.waitingServers.await();
 			}
 			this.lock = LockState.NOLOCK;
-			this.waitingServers.signalAll();
+			this.waitingServers.signal();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -180,7 +194,7 @@ public class JvnObjectImpl implements JvnObject {
 			else if (this.lock == LockState.WRITECACHEDREAD) {
 				this.lock = LockState.READ;
 			}
-			this.waitingServers.signalAll();
+			this.waitingServers.signal();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

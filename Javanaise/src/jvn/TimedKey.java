@@ -5,12 +5,12 @@ public class TimedKey implements Comparable<TimedKey>{
 	private long timestamp;
 	private final String key;
 
-	protected TimedKey(String key) {
+	public TimedKey(String key) {
 		this.key = key;
 		this.timestamp = System.currentTimeMillis();
 	}
 
-	protected String getKey() {
+	public String getKey() {
 		return this.key;
 	}
 
