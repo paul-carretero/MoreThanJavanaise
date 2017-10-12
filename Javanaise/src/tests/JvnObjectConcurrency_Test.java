@@ -86,7 +86,6 @@ public class JvnObjectConcurrency_Test {
 		
 		for (Thread t : runnableList) {
 			t.start();
-			System.out.println(barrier.getNumberWaiting());
 		}
 		
 		// so beautiful

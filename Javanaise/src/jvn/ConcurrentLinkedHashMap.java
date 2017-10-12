@@ -67,6 +67,8 @@ public class ConcurrentLinkedHashMap extends LinkedHashMap<String,JvnObject> {
 	protected boolean removeEldestEntry(Map.Entry<String,JvnObject> eldest){
 		if(this.size() > MAX_ENTRIES){
 			if(eldest.getValue().isFreeOfLock()){
+				System.err.println("666->"+eldest.getValue().jvnGetObjectId());
+				JvnServerImpl.jvnGetServer().invalideKey(eldest.getValue().jvnGetObjectId());
 				return true;
 			}
 			this.remove(eldest.getKey());
@@ -74,8 +76,4 @@ public class ConcurrentLinkedHashMap extends LinkedHashMap<String,JvnObject> {
 		}
 		return false;
 	}
-
-
-
-
 }

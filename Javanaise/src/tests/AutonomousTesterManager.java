@@ -60,6 +60,5 @@ public class AutonomousTesterManager {
 			System.out.println("fail...");
 		}
 		collaborativeObject.jvnUnLock();
-		
 	}
 }

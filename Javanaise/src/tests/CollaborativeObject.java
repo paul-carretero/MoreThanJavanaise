@@ -29,5 +29,4 @@ public class CollaborativeObject implements Serializable{
 			return 0;
 		}
 	}
-
 }

@@ -14,6 +14,9 @@ public class JvnObject_Test {
 	static JvnObjectImpl JvnObjectTest2;
 	static JvnObjectImpl JvnObjectTest3;
 	
+	/**
+	 * @throws Exception
+	 */
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		JvnObjectTest1 = new JvnObjectImpl(0, "JvnObjectTest1 - ");
@@ -21,6 +24,9 @@ public class JvnObject_Test {
 		JvnObjectTest3 = new JvnObjectImpl(2, "JvnObjectTest3 - ");
 	}
 	
+	/**
+	 * @throws JvnException
+	 */
 	@SuppressWarnings("static-method")
 	@Test(timeout=1000)
 	public void localLockTest() throws JvnException {

@@ -47,7 +47,6 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	public void jvnLockRead() throws JvnException {
-		Shared.log("JvnObjectImpl","jvnLockRead " + this.lock);
 		this.threadLock.lock();
 		switch (this.lock) {
 		case NOLOCK:
@@ -78,7 +77,6 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	public void jvnLockWrite() throws JvnException {
-		Shared.log("JvnObjectImpl","jvnLockWrite " + this.lock);
 		this.threadLock.lock();
 		switch (this.lock) {
 		case NOLOCK:
@@ -114,7 +112,6 @@ public class JvnObjectImpl implements JvnObject {
 	 */
 	@Override
 	public boolean jvnUnLock() throws JvnException {
-		Shared.log("JvnObjectImpl","jvnUnLock ");
 		this.threadLock.lock();
 		
 		if(this.HasBeenInvalidated) {

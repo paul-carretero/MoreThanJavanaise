@@ -51,7 +51,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public int jvnGetObjectId() throws java.rmi.RemoteException,jvn.JvnException {
-		Shared.log("JvnCoordImpl","jvnGetObjectId");
 		return this.currentOjectId.getAndIncrement();
 	}
 
@@ -65,7 +64,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
-		Shared.log("JvnCoordImpl","jvnRegisterObject "+jon);
 		jo.defaultLock();
 		this.jvnObject.put(jo, jon, js);
 	}
@@ -78,7 +76,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
-		Shared.log("JvnCoordImpl","jvnLookupObject "+jon);
 		return this.jvnObject.get(jon);
 	}
 
@@ -91,7 +88,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		Shared.log("JvnCoordImpl","jvnLockRead "+ joi);
 		AtomicInteger ww = this.waitingWriters.get(joi);
 		if(ww != null && ww.get() > 1) {
 			synchronized (ww) {
@@ -119,7 +115,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		Shared.log("JvnCoordImpl","jvnLockWrite "+ joi);
 		if(this.waitingWriters.get(joi) == null) {
 			this.waitingWriters.put(joi, new AtomicInteger(1));
 		}
@@ -153,12 +148,11 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
-		Shared.log("JvnCoordImpl","jvnTerminate ");
 		this.jvnObject.cleanUpServer(js);
 	}
 
 	@Override
-	public void invalidateKey(int key, JvnServerImpl js) {
+	public void invalidateKey(int key, JvnRemoteServer js) {
 		Shared.log("JvnCoordImpl","invalidateKey " + key);
 		this.jvnObject.cleanUpKey(key,js);
 	}

@@ -12,8 +12,8 @@ import jvn.JvnException;
 import jvn.JvnObject;
 import jvn.JvnServerImpl;
 
-public class LocalBurnTest {
-	
+public class JvnLocalServerTest {
+
 	private static final int 	ITERATION 		= 200;
 	private final JvnServerImpl js 				= JvnServerImpl.jvnGetServer();
 	private final List<Integer> actualObject	= new ArrayList<Integer>();
@@ -21,10 +21,10 @@ public class LocalBurnTest {
 	@Before
 	public void setUp() throws Exception {
 		this.js.clearCache(true);
-		
+
 		assertNull("Vérification que les serveurs sont vide", this.js.jvnLookupObject("0"));		
 	}
-	
+
 	private void populate() throws JvnException {
 		for (Integer i = 0; i < ITERATION; i++) {
 			this.actualObject.add(i);
@@ -41,7 +41,7 @@ public class LocalBurnTest {
 			assertNotNull("Vérification que les objets ont bien été créé", this.js.jvnLookupObject(i.toString()));
 		}
 	}
-	
+
 	@Test(timeout = 1000)
 	public void localBurnEqual() throws JvnException {
 		populate();
@@ -49,27 +49,55 @@ public class LocalBurnTest {
 			assertEquals("Vérification que les objets créé sont OK", i.toString(), this.js.jvnLookupObject(i.toString()).jvnGetObjectState().toString());
 		}
 	}
-	
+
 	@Test(timeout = 1000)
-	public void localBurnAccess() throws JvnException {
+	public void localLRUCacheTest() throws JvnException {
 		populate();
 		long start;
 		long end;
 		long tps1;
 		long tps2;
-		
+
 		// "0" n'est plus en cache
-		start = System.currentTimeMillis();
+		start = System.nanoTime();
 		this.js.jvnLookupObject("0");
-		end = System.currentTimeMillis();
+		end = System.nanoTime();
 		tps1 = end-start;
-		
+
 		// "ITERATION" est en cache
-		start = System.currentTimeMillis();
-		this.js.jvnLookupObject("0");
-		end = System.currentTimeMillis();
+		start = System.nanoTime();
+		this.js.jvnLookupObject(String.valueOf(ITERATION));
+		end = System.nanoTime();
 		tps2 = end-start;
-		
+
+		assertTrue("temps d'acces en cache plus petit", tps1 > tps2);
+
+		// "1" n'est plus en cache
+		start = System.nanoTime();
+		this.js.jvnLookupObject("1");
+		end = System.nanoTime();
+		tps1 = end-start;
+
+		// "ITERATION - 1" est en cache
+		start = System.nanoTime();
+		this.js.jvnLookupObject(String.valueOf(ITERATION-1));
+		end = System.nanoTime();
+		tps2 = end-start;
+
+		assertTrue("temps d'acces en cache plus petit", tps1 > tps2);
+
+		// "2" n'est plus en cache
+		start = System.nanoTime();
+		this.js.jvnLookupObject("2");
+		end = System.nanoTime();
+		tps1 = end-start;
+
+		// "ITERATION - 2" est en cache
+		start = System.nanoTime();
+		this.js.jvnLookupObject(String.valueOf(ITERATION-2));
+		end = System.nanoTime();
+		tps2 = end-start;
+
 		assertTrue("temps d'acces en cache plus petit", tps1 > tps2);
 	}
 

@@ -75,7 +75,7 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		}
 	}
 
-	public void cleanUpKey(int key, JvnServerImpl js) {
+	public void cleanUpKey(int key, JvnRemoteServer js) {
 		Set<JvnRemoteServer> readingServerOnKey = this.readingServer.get(key);
 		if(readingServerOnKey != null) {
 			readingServerOnKey.remove(js);
