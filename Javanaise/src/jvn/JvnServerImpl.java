@@ -199,7 +199,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * Invalidate the Read lock of the JVN object identified by id 
 	 * called by the JvnCoord
 	 * @param joi : the JVN object id
-	 * @return void
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override

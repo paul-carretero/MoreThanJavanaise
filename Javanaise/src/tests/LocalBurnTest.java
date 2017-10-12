@@ -14,7 +14,7 @@ import jvn.JvnServerImpl;
 
 public class LocalBurnTest {
 	
-	private static final int 	ITERATION 		= 10;
+	private static final int 	ITERATION 		= 200;
 	private final JvnServerImpl js 				= JvnServerImpl.jvnGetServer();
 	private final List<Integer> actualObject	= new ArrayList<Integer>();
 
@@ -31,7 +31,6 @@ public class LocalBurnTest {
 			JvnObject o = this.js.jvnCreateObject(i.toString());
 			this.js.jvnRegisterObject(i.toString(), o);
 			o.jvnUnLock();
-			System.out.println(o.isFreeOfLock());
 		}
 	}
 
