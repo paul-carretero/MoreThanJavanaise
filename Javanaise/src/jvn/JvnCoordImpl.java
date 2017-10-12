@@ -11,8 +11,8 @@ package jvn;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -23,7 +23,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	private static final long 	serialVersionUID = 1L;
 	private static final String HOST = "//localhost/";
 	private final AtomicInteger currentOjectId;
-	private final Map<Integer,AtomicInteger> waitingWriters;
+	private Map<Integer,AtomicInteger> waitingWriters;
 	
 	/**
 	 * Ensemble Objets JVN stockés
@@ -41,7 +41,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		super();
 		Naming.rebind(HOST+"JvnCoord", this);
 		this.currentOjectId = new AtomicInteger();
-		this.waitingWriters = new HashMap<Integer,AtomicInteger>();
+		this.waitingWriters = new ConcurrentHashMap<Integer,AtomicInteger>();
 		this.jvnObject 		= new JvnObjectMapCoord();
 	}
 
@@ -66,7 +66,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	@Override
 	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
 		Shared.log("JvnCoordImpl","jvnRegisterObject "+jon);
-		jo.newLock();
+		jo.defaultLock();
 		this.jvnObject.put(jo, jon, js);
 	}
 
@@ -161,6 +161,17 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	public void invalidateKey(int key, JvnServerImpl js) {
 		Shared.log("JvnCoordImpl","invalidateKey " + key);
 		this.jvnObject.cleanUpKey(key,js);
+	}
+	
+	/**
+	 * seulement pour les tests
+	 * réinitialise la base du coordinateur
+	 */
+	@Override
+	public void jvnResetCoord() throws java.rmi.RemoteException, JvnException {
+		this.currentOjectId.set(0);
+		this.waitingWriters = new ConcurrentHashMap<Integer,AtomicInteger>();
+		this.jvnObject 		= new JvnObjectMapCoord();
 	}
 	
 	public static void main(String argv[]) throws Exception {

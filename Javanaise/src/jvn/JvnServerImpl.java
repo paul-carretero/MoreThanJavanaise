@@ -38,7 +38,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	/**
 	 * "Cache" des objets JVN stockés localements
 	 */
-	private JvnObjectMap LocalsJvnObject;
+	private JvnObjectMapServ LocalsJvnObject;
 
 	/**
 	 * Référence vers le registre RMI
@@ -53,12 +53,12 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 		super();
 		this.LocalsJvnObject	= new JvnObjectMapServ();
 		if(localOnly) {
-			this.rmiRegistry		= null;
-			this.jvnRemoteCoord 	= null;
+			this.rmiRegistry	= null;
+			this.jvnRemoteCoord = null;
 		}
 		else {
-			this.rmiRegistry		= LocateRegistry.getRegistry(HOST);
-			this.jvnRemoteCoord 	= (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord");
+			this.rmiRegistry	= LocateRegistry.getRegistry(HOST);
+			this.jvnRemoteCoord = (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord");
 		}
 	}
 
@@ -242,6 +242,19 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 			this.jvnRemoteCoord.invalidateKey(intKey,this);
 		} catch (RemoteException | JvnException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * principalement utile pour les tests
+	 * @throws JvnException 
+	 * @throws RemoteException 
+	 */
+	@Override
+	public void clearCache(boolean hard) throws RemoteException, JvnException {
+		this.LocalsJvnObject = new JvnObjectMapServ();
+		if(hard) {
+			this.jvnRemoteCoord.jvnResetCoord();
 		}
 	}
 }

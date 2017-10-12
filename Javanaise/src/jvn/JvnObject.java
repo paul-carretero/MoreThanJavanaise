@@ -31,16 +31,16 @@ public interface JvnObject extends Serializable {
 
 	/**
 	 * Unlock  the object 
-	 * @throws JvnException
-	 **/
-	public void jvnUnLock() throws jvn.JvnException; 
+	 * @return true cas normal, false si verrou invalidé par le coordinateur
+	 * @throws jvn.JvnException
+	 */
+	public boolean jvnUnLock() throws jvn.JvnException; 
 
 
 	/**
 	 * Get the object identification
-	 * @throws JvnException
 	 **/
-	public int jvnGetObjectId() throws jvn.JvnException; 
+	public int jvnGetObjectId(); 
 
 	/**
 	 * Get the object state
@@ -75,7 +75,14 @@ public interface JvnObject extends Serializable {
 	 */
 	public void setSerializableObject(Serializable o);
 	
+	/**
+	 * Invalide tous les verrou sur cet objet de manière préemptive \0/
+	 * La valeur de l'objet sur le coordinateur est conservé
+	 * @throws JvnException 
+	 */
+	public void jvnInvalidatePremptively() throws JvnException;
+	
 	public boolean isFreeOfLock();
 
-	public void newLock();
+	public void defaultLock();
 }

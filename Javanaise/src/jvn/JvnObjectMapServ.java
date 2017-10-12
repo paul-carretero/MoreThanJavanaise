@@ -1,14 +1,12 @@
 package jvn;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JvnObjectMapServ extends JvnObjectMap {
-	
-	private static final int MAX_CACHE_SIZE = 10;
 
 	public JvnObjectMapServ() {
-		this.LocalsJvnObject	= new LRUHashMap(MAX_CACHE_SIZE);
-		this.assocMap			= new HashMap<Integer, String>();
+		this.LocalsJvnObject	= new LRUHashMap();
+		this.assocMap			= new ConcurrentHashMap<Integer, String>();
 	}
 
 }

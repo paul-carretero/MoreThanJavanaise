@@ -35,15 +35,15 @@ public class TimedKey implements Comparable<TimedKey>{
 		return this.key.hashCode();
 	}
 
-	/**
-	 * \o/
-	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
 		if (obj == null)
 			return false;
-		return ((obj instanceof TimedKey) && ((TimedKey) obj).key.equals(this.key) ) || this.key.equals(obj);
+		return ((obj instanceof TimedKey) && ((TimedKey) obj).key.equals(this.key) );
+	}
+	
+	@Override
+	public java.lang.String toString() {
+		return "[" + String.valueOf(this.timestamp) + "] : " + this.key;
 	}
 }

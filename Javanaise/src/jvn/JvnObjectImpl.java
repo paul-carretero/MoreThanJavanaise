@@ -6,18 +6,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class JvnObjectImpl implements JvnObject {
-
-	private static final long 	serialVersionUID	= 1L;
-
-	private final int 		jvnObjectId;
-	private Serializable	serializableObject;
 	
-	private final Lock threadLock;
-	private final Condition waitingServers;
-
-	private static final JvnLocalServer LOCAL_SERVER = JvnServerImpl.jvnGetServer();
-
-	private LockState lock;
 	public enum LockState{
 		NOLOCK,
 		READCACHED,
@@ -27,12 +16,25 @@ public class JvnObjectImpl implements JvnObject {
 		WRITECACHEDREAD;
 	}
 
+	private static final long 			serialVersionUID	= 1L;
+	private static final JvnLocalServer	LOCAL_SERVER 		= JvnServerImpl.jvnGetServer();
+
+	private final int 		jvnObjectId;
+	private Serializable	serializableObject;
+	
+	private final Lock 		threadLock;
+	private final Condition	waitingServers;
+	
+	private volatile boolean	HasBeenInvalidated;
+	private volatile LockState	lock;
+
 	public JvnObjectImpl(int jvnObjectId, Serializable serializableObject) {
 		this.serializableObject	= serializableObject;
 		this.jvnObjectId 		= jvnObjectId;
 		this.lock				= LockState.WRITE;
 		this.threadLock			= new ReentrantLock();
 		this.waitingServers		= this.threadLock.newCondition();
+		this.HasBeenInvalidated	= false;
 	}
 	
 	public LockState jvngetLock() {
@@ -107,10 +109,22 @@ public class JvnObjectImpl implements JvnObject {
 		this.threadLock.unlock();
 	}
 
+	/**
+	 * 
+	 */
 	@Override
-	public void jvnUnLock() throws JvnException {
+	public boolean jvnUnLock() throws JvnException {
 		Shared.log("JvnObjectImpl","jvnUnLock ");
 		this.threadLock.lock();
+		
+		if(this.HasBeenInvalidated) {
+			this.HasBeenInvalidated	= false;
+			this.lock 				= LockState.NOLOCK;
+			this.waitingServers.signal();
+			this.threadLock.unlock();
+			return false;
+		}
+		
 		switch (this.lock) {
 		case READ:
 			this.lock = LockState.READCACHED;
@@ -132,17 +146,18 @@ public class JvnObjectImpl implements JvnObject {
 		}
 		this.waitingServers.signal();
 		this.threadLock.unlock();
+		return true;
 	}
 	
 	@Override
-	public void newLock() {
+	public void defaultLock() {
 		this.threadLock.lock();
 		this.lock = LockState.NOLOCK;
 		this.threadLock.unlock();
 	}
 
 	@Override
-	public int jvnGetObjectId() throws JvnException {
+	public int jvnGetObjectId(){
 		return this.jvnObjectId;
 	}
 
@@ -216,6 +231,18 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	public boolean isFreeOfLock() {
-		return this.lock == LockState.NOLOCK || this.lock == LockState.READCACHED || this.lock == LockState.WRITECACHED;
+		synchronized (this.lock) {
+			return this.lock == LockState.NOLOCK || this.lock == LockState.READCACHED || this.lock == LockState.WRITECACHED;
+		}
+	}
+	
+	@Override
+	public void jvnInvalidatePremptively() throws JvnException {
+		this.HasBeenInvalidated = true;
+	}
+	
+	@Override
+	public String toString() {
+		return "["+this.lock.toString() + "]" + " " + this.serializableObject.toString();
 	}
 }

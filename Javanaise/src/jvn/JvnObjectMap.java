@@ -1,7 +1,7 @@
 package jvn;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JvnObjectMap {
 
@@ -10,8 +10,8 @@ public class JvnObjectMap {
 	protected Map<Integer,String> assocMap;
 
 	public JvnObjectMap() {
-		this.LocalsJvnObject	= new HashMap<String, JvnObject>();
-		this.assocMap			= new HashMap<Integer, String>();
+		this.LocalsJvnObject	= new ConcurrentHashMap<String, JvnObject>();
+		this.assocMap			= new ConcurrentHashMap<Integer, String>();
 	}
 
 	public JvnObject get(int joi) {

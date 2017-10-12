@@ -66,6 +66,8 @@ public interface JvnRemoteCoord extends Remote {
 	* @throws java.rmi.RemoteException, JvnException
 	**/
   public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
+  
+  public void jvnResetCoord() throws java.rmi.RemoteException, JvnException;
 
   public void invalidateKey(int intKey, JvnServerImpl js) throws java.rmi.RemoteException, JvnException;
 
