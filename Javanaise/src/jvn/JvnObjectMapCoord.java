@@ -1,19 +1,19 @@
 package jvn;
 
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class JvnObjectMapCoord extends JvnObjectMap{
 
-	private final Map<Integer,Set<JvnRemoteServer>> readingServer;
+	private final Map<Integer,List<JvnRemoteServer>> readingServer;
 	private final Map<Integer,JvnRemoteServer> writingServer;
 
 	public JvnObjectMapCoord() {
 		super();
-		this.readingServer		= new ConcurrentHashMap<Integer, Set<JvnRemoteServer>>();
+		this.readingServer		= new ConcurrentHashMap<Integer, List<JvnRemoteServer>>();
 		this.writingServer		= new ConcurrentHashMap<Integer, JvnRemoteServer>();
 	}
 
@@ -36,13 +36,13 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 			else {
 				this.LocalsJvnObject.put(jon, jo);
 				this.assocMap.put(jo.jvnGetObjectId(),jon);
-				this.readingServer.put(jo.jvnGetObjectId(), new HashSet<JvnRemoteServer>());
+				this.readingServer.put(jo.jvnGetObjectId(), new CopyOnWriteArrayList<JvnRemoteServer>());
 				this.writingServer.put(jo.jvnGetObjectId(), js);
 			}
 		}
 	}
 
-	public Set<JvnRemoteServer> getReadingServer(int joi){
+	public List<JvnRemoteServer> getReadingServer(int joi){
 		return this.readingServer.get(joi);
 	}
 
@@ -70,13 +70,13 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 			}
 		}
 		
-		for (Set<JvnRemoteServer> server : this.readingServer.values()) {
+		for (List<JvnRemoteServer> server : this.readingServer.values()) {
 		    server.remove(js);
 		}
 	}
 
 	public void cleanUpKey(int key, JvnRemoteServer js) {
-		Set<JvnRemoteServer> readingServerOnKey = this.readingServer.get(key);
+		List<JvnRemoteServer> readingServerOnKey = this.readingServer.get(key);
 		if(readingServerOnKey != null) {
 			readingServerOnKey.remove(js);
 		}

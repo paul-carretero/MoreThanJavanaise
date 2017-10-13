@@ -26,6 +26,12 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	private Map<Integer,AtomicInteger> waitingWriters;
 	
 	/**
+	 * priorité des demande de verrou en écriture par rapport aux demande de verrou en lecture
+	 * 0 = pas de priorité, 1 priorité totale
+	 */
+	private static final double WRITER_PRIORITY = 0.25d;
+	
+	/**
 	 * Ensemble Objets JVN stockés
 	 */
 	private JvnObjectMapCoord jvnObject;
@@ -88,16 +94,16 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		AtomicInteger ww = this.waitingWriters.get(joi);
-		if(ww != null && ww.get() > 1) {
+		/*AtomicInteger ww = this.waitingWriters.get(joi);
+		if(ww != null && ww.get() > 1){
 			synchronized (ww) {
 				try {
-					this.wait();
+					ww.wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
-		}
+		}*/
 		
 		if(!this.jvnObject.getWritingServer(joi).equals(js)) {
 			this.jvnObject.get(joi).setSerializableObject(this.jvnObject.getWritingServer(joi).jvnInvalidateWriterForReader(joi));
@@ -153,7 +159,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 
 	@Override
 	public void invalidateKey(int key, JvnRemoteServer js) {
-		Shared.log("JvnCoordImpl","invalidateKey " + key);
 		this.jvnObject.cleanUpKey(key,js);
 	}
 	

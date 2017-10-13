@@ -1,19 +1,24 @@
 package tests;
 
+import java.net.MalformedURLException;
+import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import jvn.JvnCoordImpl;
 import jvn.JvnException;
 import jvn.JvnObject;
 import jvn.JvnServerImpl;
 
 public class AutonomousTesterManager {
 
-	public static void main(String[] args) throws NumberFormatException, JvnException, InterruptedException {
+	public AutonomousTesterManager(String[] args) throws NumberFormatException, JvnException, InterruptedException {
 		JvnServerImpl js = JvnServerImpl.jvnGetServer();
 		int nproc = Integer.parseInt(args[0]);
 				
-		JvnObject startBarrier = js.jvnCreateObject(new AutonomousTestBarrier(nproc));
-		JvnObject endBarrier = js.jvnCreateObject(new AutonomousTestBarrier(nproc));
+		JvnObject startBarrier = js.jvnCreateObject(new AtomicInteger(nproc));
+		JvnObject endBarrier = js.jvnCreateObject(new AtomicInteger(nproc));
 		JvnObject collaborativeObject = js.jvnCreateObject(new CollaborativeObject());
 				
 		js.jvnRegisterObject("startBarrier", startBarrier);
@@ -30,7 +35,7 @@ public class AutonomousTesterManager {
 			Thread.sleep(500);
 			System.out.println("I'm dreaming...");
 			endBarrier.jvnLockRead();
-			if(( (AutonomousTestBarrier) endBarrier.jvnGetObjectState()).isItOkToLeaveNow() ) {
+			if(( (AtomicInteger) endBarrier.jvnGetObjectState()).get() <= 0 ) {
 				keepDreaming = false;
 			}
 			endBarrier.jvnUnLock();
@@ -60,5 +65,17 @@ public class AutonomousTesterManager {
 			System.out.println("fail...");
 		}
 		collaborativeObject.jvnUnLock();
+	}
+	
+	public static void main(String[] args) throws NumberFormatException, JvnException, InterruptedException, RemoteException, MalformedURLException {
+		if(args[0].equals("manager")) {
+			new AutonomousTesterManager(Arrays.copyOfRange(args,1,args.length));
+		}
+		else if(args[0].equals("tester")) {
+			new AutonomousTester(Arrays.copyOfRange(args,1,args.length));
+		}
+		else {
+			new JvnCoordImpl();
+		}
 	}
 }

@@ -83,6 +83,8 @@ public interface JvnObject extends Serializable {
 	public void jvnInvalidatePremptively() throws JvnException;
 	
 	public boolean isFreeOfLock();
+	
+	public String getLockStatus();
 
 	public void defaultLock();
 }

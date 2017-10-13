@@ -242,4 +242,11 @@ public class JvnObjectImpl implements JvnObject {
 	public String toString() {
 		return "["+this.lock.toString() + "]" + " " + this.serializableObject.toString();
 	}
+
+	@Override
+	public String getLockStatus() {
+		synchronized (this.lock) {
+			return this.lock.toString();
+		}
+	}
 }

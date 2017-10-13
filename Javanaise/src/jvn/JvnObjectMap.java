@@ -15,10 +15,6 @@ public class JvnObjectMap {
 	}
 
 	public JvnObject get(int joi) {
-		Shared.log("JvnObjectMap","get joi : "+ joi);
-		Shared.log("JvnObjectMap","get assocMap : "+ this.assocMap.get(joi));
-		Shared.log("JvnObjectMap","get assocMap : "+ this.assocMap.toString());
-		Shared.log("JvnObjectMap","get LocalsJvnObject : "+ this.LocalsJvnObject.get(this.assocMap.get(joi)));
 		return this.LocalsJvnObject.get(this.assocMap.get(joi));
 	}
 
