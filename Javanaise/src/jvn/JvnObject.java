@@ -87,4 +87,8 @@ public interface JvnObject extends Serializable {
 	public String getLockStatus();
 
 	public void defaultLock();
+
+	public void notifyWaitingReader(Serializable o);
+
+	public void notifyWaitingWriter(Serializable o);
 }

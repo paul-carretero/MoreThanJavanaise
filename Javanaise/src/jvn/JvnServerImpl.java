@@ -252,6 +252,16 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 			this.jvnRemoteCoord.jvnResetCoord();
 		}
 	}
+
+	@Override
+	public void notifyForReadLock(int joi, Serializable o) throws RemoteException {
+		this.LocalsJvnObject.get(joi).notifyWaitingReader(o);
+	}
+
+	@Override
+	public void notifyForWriteLock(int joi, Serializable o) throws RemoteException {
+		this.LocalsJvnObject.get(joi).notifyWaitingWriter(o);
+	}
 }
 
 

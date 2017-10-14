@@ -47,7 +47,7 @@ public class AutonomousTester {
 				keepDreaming = false;				
 			}
 			startBarrier.jvnUnLock();
-			Thread.sleep(50);
+			//Thread.sleep(50);
 		}
 		
 		System.out.println("[WORKER "+ id + "]: SYNCHRONIZED");
@@ -75,7 +75,7 @@ public class AutonomousTester {
 				res++;
 			}
 			collaborativeObject.jvnUnLock();
-			Thread.sleep(50);
+			//Thread.sleep(50);
 		}
 		return res;
 	}
