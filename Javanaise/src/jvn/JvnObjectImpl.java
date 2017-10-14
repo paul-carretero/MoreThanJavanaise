@@ -139,18 +139,6 @@ public class JvnObjectImpl implements JvnObject {
 	}
 	
 	@Override
-	synchronized public void notifyWaitingWriter(Serializable o) {
-		this.lock = LockState.WRITE;
-		this.serializableObject = o;
-		synchronized(this.waitForWriteLockNotify) {
-			this.waitForWriteLockNotify.notifyAll();
-		}
-		synchronized(this.waitForReadLockNotify) {
-			this.waitForReadLockNotify.notifyAll();
-		}
-	}
-	
-	@Override
 	synchronized public void notifyWaitingReader(Serializable o) {
 		this.lock = LockState.READ;
 		this.serializableObject = o;

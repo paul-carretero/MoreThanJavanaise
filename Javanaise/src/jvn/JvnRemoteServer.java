@@ -41,9 +41,6 @@ public interface JvnRemoteServer extends Remote {
 	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.JvnException;
 
 	public void notifyForReadLock(int joi, Serializable o) throws java.rmi.RemoteException;
-	
-	public void notifyForWriteLock(int joi, Serializable o) throws java.rmi.RemoteException;
-
 }
 
 

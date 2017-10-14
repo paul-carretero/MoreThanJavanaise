@@ -42,12 +42,10 @@ public class AutonomousTester {
 		boolean keepDreaming = true;
 		while(keepDreaming) {
 			startBarrier.jvnLockRead();
-			System.out.println("[WORKER "+ id + "]: startBarrier : " + startBarrier);
 			if(((AtomicInteger) startBarrier.jvnGetObjectState()).get() <= 0) {
 				keepDreaming = false;				
 			}
 			startBarrier.jvnUnLock();
-			//Thread.sleep(50);
 		}
 		
 		System.out.println("[WORKER "+ id + "]: SYNCHRONIZED");
@@ -65,18 +63,36 @@ public class AutonomousTester {
 		JvnLocalServer js = JvnServerImpl.jvnGetServer();
 		JvnObject collaborativeObject = js.jvnLookupObject("collaborativeObject");
 		int res = 0;
+		boolean wait = true;
+		System.out.print("[WORKER "+ id + "]: ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░");
+		int n = iteration/50;
+		int toremove = 50;
 		for (int i = 0; i < iteration; i++) {
+			if(i % n == 0) {
+				for(int j = toremove; j>0; j--) {
+					System.out.print("\b");
+				}
+				toremove--;
+				System.out.print("█");
+				for(int j = toremove; j>0; j--) {
+					System.out.print("░");
+				}
+			}
+			wait = true;
 			collaborativeObject.jvnLockRead();
 			int last = ((CollaborativeObject) collaborativeObject.jvnGetObjectState()).getLast();
-			System.out.println("tid = "+id+" & last = "+ last + " & previous = " + previous);
 			if(last == previous || (last == 0 && id == 1)) {
 				collaborativeObject.jvnLockWrite();
 				((CollaborativeObject) collaborativeObject.jvnGetObjectState()).addMe(id);
 				res++;
+				wait = false;
 			}
 			collaborativeObject.jvnUnLock();
-			//Thread.sleep(50);
+			if(wait) {
+				Thread.sleep(1);
+			}
 		}
+		System.out.println();
 		return res;
 	}
 }

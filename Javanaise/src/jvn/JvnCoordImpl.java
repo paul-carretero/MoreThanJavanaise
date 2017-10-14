@@ -25,11 +25,6 @@ import java.net.MalformedURLException;
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 
-	public enum RequestType {
-		READ,
-		WRITE
-	}
-
 	private static final long 	serialVersionUID = 1L;
 	private static final String HOST = "//localhost/";
 	private final AtomicInteger currentOjectId;
@@ -130,7 +125,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 			this.objectLocks.get(joi).unlock();
 			return o;
 		}
-		this.threadPool.execute(new JvnCoordNotifyWorker(this, joi, js, RequestType.READ));
+		this.threadPool.execute(new JvnCoordNotifyWorker(this, joi, js));
 		return null;
 	}
 
@@ -147,12 +142,10 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	
 	public void waitOnWW(int joi) {
 		AtomicInteger ww = this.waitingWriters.get(joi);
-		while(ww.get() > 0) {
+		if(ww.get() > 0) {
 			synchronized (ww) {
 				try {
-					System.out.println("---000---");
 					ww.wait();
-					System.out.println("---007---");
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -168,17 +161,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	@Override
-	/*public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		this.waitingWriters.get(joi).incrementAndGet();
-		if(this.objectLocks.get(joi).tryLock()) {
-			Serializable o = jvnLockWriteHandler(joi,js);
-			this.objectLocks.get(joi).unlock();
-			return o;
-		}
-		this.threadPool.execute(new JvnCoordNotifyWorker(this, joi, js, RequestType.WRITE));
-		return null;
-	}*/
-	
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws RemoteException, JvnException {
 		this.waitingWriters.get(joi).incrementAndGet();
 		this.objectLocks.get(joi).lock();
