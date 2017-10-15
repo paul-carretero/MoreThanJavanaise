@@ -5,9 +5,11 @@
  * Authors: 
  */
 
-package jvn;
+package jvn.jvnObject;
 
 import java.io.*;
+
+import jvn.JvnException;
 
 /**
  * Interface of a JVN object. 
@@ -39,11 +41,13 @@ public interface JvnObject extends Serializable {
 
 	/**
 	 * Get the object identification
+	 * @return l'id de l'objet
 	 **/
 	public int jvnGetObjectId(); 
 
 	/**
 	 * Get the object state
+	 * @return l'objet applicatif encapsuler dans cet objet javanaise
 	 * @throws JvnException
 	 **/
 	public Serializable jvnGetObjectState()	throws jvn.JvnException; 
@@ -82,11 +86,22 @@ public interface JvnObject extends Serializable {
 	 */
 	public void jvnInvalidatePremptively() throws JvnException;
 	
+	/**
+	 * vérifie si un objet est utilisé par une application (possède un verrou actif)
+	 * @return vrai si l'objet n'a pas de verrou en lecture/ecriture (hors ceux en cache), faux sinon
+	 */
 	public boolean isFreeOfLock();
 	
-	public String getLockStatus();
-
+	/**
+	 * réinitialise le lock de l'objet de nolock
+	 * Par défaut lors de la création celui si est en write
+	 * @see JvnObject
+	 */
 	public void defaultLock();
 
+	/**
+	 * Réveil les eventuelle thread en attente de verrou en lecture sur cet objet et met à jour la valeur de l'objet encapsulé
+	 * @param o un objet serializable encapsuler dans ce JvnObject
+	 */
 	public void notifyWaitingReader(Serializable o);
 }

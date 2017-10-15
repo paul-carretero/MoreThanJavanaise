@@ -1,10 +1,16 @@
-package jvn;
+package jvn.jvnCoord;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import jvn.JvnException;
+import jvn.JvnObjectMap;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnObjectMapCoord extends JvnObjectMap{
 
@@ -24,7 +30,6 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 	 * @param js
 	 * @throws JvnException
 	 */
-	@Override
 	public void put(JvnObject jo, String jon, JvnRemoteServer js) throws JvnException {
 		synchronized(jon.intern()){
 			if(this.assocMap.containsKey(jo.jvnGetObjectId())) {
@@ -75,14 +80,15 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		}
 	}
 
-	public void cleanUpKey(int key, JvnRemoteServer js) {
-		List<JvnRemoteServer> readingServerOnKey = this.readingServer.get(key);
+	public void cleanUpKey(int joi, Serializable o, JvnRemoteServer js) {
+		List<JvnRemoteServer> readingServerOnKey = this.readingServer.get(joi);
 		if(readingServerOnKey != null) {
 			readingServerOnKey.remove(js);
 		}
 	
-		if(this.writingServer.get(key) == js) {
-			this.writingServer.remove(key);
+		if(this.writingServer.get(joi) == js) {
+			this.get(joi).setSerializableObject(o);
+			this.writingServer.remove(joi);
 		}
 	}
 }

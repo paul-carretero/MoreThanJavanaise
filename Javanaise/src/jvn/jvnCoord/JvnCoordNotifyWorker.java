@@ -1,6 +1,9 @@
-package jvn;
+package jvn.jvnCoord;
 
 import java.rmi.RemoteException;
+
+import jvn.JvnException;
+import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnCoordNotifyWorker implements Runnable {
 

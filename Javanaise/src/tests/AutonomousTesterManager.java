@@ -6,10 +6,10 @@ import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jvn.JvnCoordImpl;
 import jvn.JvnException;
-import jvn.JvnObject;
-import jvn.JvnServerImpl;
+import jvn.jvnCoord.JvnCoordImpl;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnServer.JvnServerImpl;
 
 public class AutonomousTesterManager {
 

@@ -6,17 +6,24 @@
  * Authors: 
  */
 
-package jvn;
+package jvn.jvnServer;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+
+import jvn.JvnException;
+import jvn.jvnCoord.JvnRemoteCoord;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnObject.JvnObjectImpl;
+
 import java.io.*;
 
 /**
- * @author carretero
- *
+ * @author Paul Carretero
+ * Implémentation d'un serveur de cache local.
+ * Gérer comme un singleton.
  */
 public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer, JvnRemoteServer{
 	/**
@@ -124,7 +131,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 		synchronized (jon.intern()) {
 			try {
 				this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
-				this.LocalsJvnObject.put(jo, jon, this);
+				this.LocalsJvnObject.put(jo, jon);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				throw new JvnException("Erreur lors de l'enregistrement de l'objet");
@@ -148,7 +155,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 			try {
 				JvnObject jo = this.jvnRemoteCoord.jvnLookupObject(jon, this);
 				if(jo != null) {
-					this.LocalsJvnObject.put(jo, jon, this);
+					this.LocalsJvnObject.put(jo, jon);
 				}
 				return jo;
 			} catch (RemoteException e) {
@@ -209,7 +216,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
+	public Serializable jvnInvalidateWriter(final int joi) throws java.rmi.RemoteException,jvn.JvnException { 
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
@@ -229,32 +236,31 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	}
 
 	/**
-	 * @param intKey identifiant de l'objet supprime du cache local
+	 * @param joi identifiant de l'objet supprime du cache local
 	 */
-	public void invalideKey(final int intKey) {
-		Shared.log("JvnServImpl","invalideKey " + intKey);
+	public void invalideKey(final int joi) {
 		try {
-			this.jvnRemoteCoord.invalidateKey(intKey,this);
+			this.jvnRemoteCoord.invalidateKey(joi,this.LocalsJvnObject.get(joi),this);
+			this.LocalsJvnObject.removeFromAssocMap(joi);
 		} catch (RemoteException | JvnException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	/**
-	 * principalement utile pour les tests
-	 * @throws JvnException 
-	 * @throws RemoteException 
-	 */
+
 	@Override
-	public void clearCache(boolean hard) throws RemoteException, JvnException {
+	public void clearCache(final boolean hard) throws JvnException {
 		this.LocalsJvnObject = new JvnObjectMapServ();
-		if(hard) {
-			this.jvnRemoteCoord.jvnResetCoord();
+		if(hard && this.jvnRemoteCoord != null) {
+			try {
+				this.jvnRemoteCoord.jvnResetCoord();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	@Override
-	public void notifyForReadLock(int joi, Serializable o) throws RemoteException {
+	public void notifyForReadLock(final int joi, final Serializable o) throws RemoteException {
 		this.LocalsJvnObject.get(joi).notifyWaitingReader(o);
 	}
 }

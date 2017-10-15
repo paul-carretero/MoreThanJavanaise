@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.junit.Before;
 import org.junit.Test;
 import jvn.JvnException;
-import jvn.JvnObjectImpl;
+import jvn.jvnObject.JvnObjectImpl;
 
 public class JvnObjectConcurrency_Test {
 	

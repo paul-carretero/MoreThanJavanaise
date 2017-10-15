@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import jvn.JvnException;
-import jvn.JvnObjectImpl;
+import jvn.jvnObject.JvnObjectImpl;
 
 public class JvnObject_Test {
 	

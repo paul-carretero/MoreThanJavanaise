@@ -5,14 +5,17 @@
  * Authors: 
  */
 
-package jvn;
+package jvn.jvnServer;
 import java.io.Serializable;
-import java.rmi.RemoteException;
+
+import jvn.JvnException;
+import jvn.jvnObject.JvnObject;
 
 /**
  * Local interface of a JVN server  (used by the applications).
  * An application can get the reference of a JVN server through the static
- * method jvnGetServer() (see  JvnServerImpl). 
+ * method jvnGetServer().
+ * @see JvnServerImpl
  */
 
 public interface JvnLocalServer {
@@ -65,7 +68,12 @@ public interface JvnLocalServer {
 	 **/
 	public void jvnTerminate() throws jvn.JvnException; 
 	
-	public void clearCache(boolean hard) throws RemoteException, JvnException;
+	/**
+	 * principalement utile pour les tests pour réinitialiser les serveur
+	 * @param hard vrai si l'on doit également réinitialiser le coordinateur
+	 * @throws JvnException 
+	 */
+	public void clearCache(boolean hard) throws JvnException;
 }
 
 

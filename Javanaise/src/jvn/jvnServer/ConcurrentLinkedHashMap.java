@@ -1,8 +1,10 @@
-package jvn;
+package jvn.jvnServer;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import jvn.jvnObject.JvnObject;
 
 /*
         __
@@ -12,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 */
 
 /**
- * @author carretero
+ * @author Paul Carretero
  * Classe permettant de gérer une Map de taille maximum avec une politique d'éviction de type LRU
  * Gère "théoriquement" mieux les accès concurent 
  */
@@ -29,7 +31,7 @@ public class ConcurrentLinkedHashMap extends LinkedHashMap<String,JvnObject> {
 	private static final int  MAX_ENTRIES		= 100;
 	
 	/**
-	 * 
+	 * verrou protégeant les modification de structure concurrente de la map (LinkedHashMap n'étant pas thread safe)
 	 */
 	private final ReentrantReadWriteLock mapLock;
 
@@ -39,7 +41,7 @@ public class ConcurrentLinkedHashMap extends LinkedHashMap<String,JvnObject> {
 	 */
 	public ConcurrentLinkedHashMap() {
 		super(16,0.75f,true); // ordered by access!!!
-		this.mapLock = new ReentrantReadWriteLock(true);
+		this.mapLock 			= new ReentrantReadWriteLock(true);
 	}
 
 	@Override
@@ -67,7 +69,6 @@ public class ConcurrentLinkedHashMap extends LinkedHashMap<String,JvnObject> {
 	protected boolean removeEldestEntry(Map.Entry<String,JvnObject> eldest){
 		if(this.size() > MAX_ENTRIES){
 			if(eldest.getValue().isFreeOfLock()){
-				System.err.println("666->"+eldest.getValue().jvnGetObjectId());
 				JvnServerImpl.jvnGetServer().invalideKey(eldest.getValue().jvnGetObjectId());
 				return true;
 			}

@@ -1,30 +1,84 @@
-package jvn;
+package jvn.jvnObject;
 
 import java.io.Serializable;
 
+import jvn.JvnException;
+import jvn.jvnServer.JvnLocalServer;
+import jvn.jvnServer.JvnServerImpl;
+
+/**
+ * @author Paul Carretero
+ * Implémentation d'un objet Javanaise
+ */
 public class JvnObjectImpl implements JvnObject {
 
+	/**
+	 * represente l'etat d'un verrou sur un objet Javanaise
+	 * Il s'agit du type de verrou sur cet objet que possède le serveur et non l'application (synchro applicatif nécessaire)
+	 */
 	public enum LockState{
+		/**
+		 * pas de verrou
+		 */
 		NOLOCK,
+		/**
+		 * pas de verrou en cours mais le serveur possède un verrou en lecture
+		 */
 		READCACHED,
+		/**
+		 * pas de verrou en cours mais le serveur possède un verrou en ecriture
+		 */
 		WRITECACHED,
+		/**
+		 * verrou en lecture
+		 */
 		READ,
+		/**
+		 * verrou en ecriture
+		 */
 		WRITE,
+		/**
+		 * verrou en lecture mais le serveur possède un verrou en ecriture
+		 */
 		WRITECACHEDREAD;
 	}
+	
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID 			= -4993207529464463527L;
+	/**
+	 * Instance du serveur javanaise local
+	 */
+	private static final JvnLocalServer	LOCAL_SERVER 	= JvnServerImpl.jvnGetServer();
 
-	private static final long 			serialVersionUID	= 1L;
-	private static final JvnLocalServer	LOCAL_SERVER 		= JvnServerImpl.jvnGetServer();
-
+	/**
+	 * identifiant unique sur l'ensemble du systeme de cet objet
+	 */
 	private final int 		jvnObjectId;
+	/**
+	 * objet applicatif encapsulé dans cet objet javanaise
+	 */
 	private Serializable	serializableObject;
 
+	/**
+	 * vrai si le coordinateur à invalidé le verrou sur cet objet
+	 */
 	private volatile boolean	HasBeenInvalidated;
+	/**
+	 * etat du verrou sur cet objet sur le serveur local
+	 */
 	private volatile LockState	lock;
 	
+	/**
+	 * monitor pour l'attente d'un verrou en lecture
+	 */
 	private final String waitForReadLockNotify	= "waitForReadLockNotify";
-	private final String waitForWriteLockNotify	= "waitForWriteLockNotify";
 
+	/**
+	 * @param jvnObjectId
+	 * @param serializableObject
+	 */
 	public JvnObjectImpl(int jvnObjectId, Serializable serializableObject) {
 		this.serializableObject	= serializableObject;
 		this.jvnObjectId 		= jvnObjectId;
@@ -32,11 +86,21 @@ public class JvnObjectImpl implements JvnObject {
 		this.HasBeenInvalidated	= false;
 	}
 
+	/**
+	 * utilisé pour les test
+	 * @return l'état courrant du verrou sur cet objet
+	 */
 	public LockState jvngetLock() {
 		return this.lock;
 
 	}
 
+	/**
+	 * Demande un verrou en lecture au coordinateur si l'on ne n'en dispose pas déjà (ou mieux).
+	 * @return true si l'on dispose du verrou en lecture, 
+	 * faux si on recevra un callback du coordinateur pour le donner au serveur de cache ulterieurement
+	 * @throws JvnException
+	 */
 	synchronized public boolean jvnLockReadHandler() throws JvnException {
 		switch (this.lock) {
 		case NOLOCK:
@@ -54,17 +118,14 @@ public class JvnObjectImpl implements JvnObject {
 			this.lock = LockState.WRITECACHEDREAD;
 			break;
 		case READ:
-			// do nothing
 			break;
 		case WRITE:
 			this.lock = LockState.WRITECACHEDREAD;
 			break;
 		case WRITECACHEDREAD:
-			// do nothing
 			break;
 		default:
-			// impossible
-			break;
+			throw new JvnException("etat du verrou inconsistant sur l'objet");
 		}
 		return true;
 	}
@@ -75,6 +136,7 @@ public class JvnObjectImpl implements JvnObject {
 			synchronized(this.waitForReadLockNotify) {
 				try {
 					this.waitForReadLockNotify.wait();
+					this.lock = LockState.READ;
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -82,34 +144,22 @@ public class JvnObjectImpl implements JvnObject {
 		}
 	}
 
-	synchronized public boolean jvnLockWriteHandler() throws JvnException {
-		Serializable o;
+	@Override
+	synchronized public void jvnLockWrite() throws JvnException {
 		switch (this.lock) {
 		case NOLOCK:
-			o = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
-			if(o == null) {
-				return false;
-			}
-			this.serializableObject = o;
+			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
 			this.lock = LockState.WRITE;
 			break;
 		case READCACHED:
-			o = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
-			if(o == null) {
-				return false;
-			}
-			this.serializableObject = o;
+			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
 			this.lock = LockState.WRITE;
 			break;
 		case WRITECACHED:
 			this.lock = LockState.WRITE;
 			break;
 		case READ:
-			o = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
-			if(o == null) {
-				return false;
-			}
-			this.serializableObject = o;
+			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
 			this.lock = LockState.WRITE;
 			break;
 		case WRITE:
@@ -121,20 +171,6 @@ public class JvnObjectImpl implements JvnObject {
 		default:
 			// impossible
 			break;
-		}
-		return true;
-	}
-	
-	@Override
-	public void jvnLockWrite() throws JvnException {
-		if(!jvnLockWriteHandler()) {
-			synchronized(this.waitForWriteLockNotify) {
-				try {
-					this.waitForWriteLockNotify.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 	}
 	
@@ -260,10 +296,5 @@ public class JvnObjectImpl implements JvnObject {
 	@Override
 	public String toString() {
 		return "["+this.lock.toString() + "]" + " " + this.serializableObject.toString();
-	}
-
-	@Override
-	public String getLockStatus() {
-		return this.lock.toString();
 	}
 }

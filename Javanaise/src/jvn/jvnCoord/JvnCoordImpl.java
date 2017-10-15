@@ -6,7 +6,7 @@
  * Authors: 
  */
 
-package jvn;
+package jvn.jvnCoord;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -18,6 +18,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import jvn.JvnException;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnServer.JvnRemoteServer;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -140,6 +144,10 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		return o;
 	}
 	
+	/**
+	 * met le thread en attente (1 seule fois) si il y a des demande de verou en écriture sur cet objet
+	 * @param joi id d'un objet javanaise
+	 */
 	public void waitOnWW(int joi) {
 		AtomicInteger ww = this.waitingWriters.get(joi);
 		if(ww.get() > 0) {
@@ -195,8 +203,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	}
 
 	@Override
-	public void invalidateKey(int key, JvnRemoteServer js) {
-		this.jvnObjects.cleanUpKey(key,js);
+	public void invalidateKey(int key, Serializable o, JvnRemoteServer js) {
+		this.jvnObjects.cleanUpKey(key,o,js);
 	}
 
 	/**
@@ -207,7 +215,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	public void jvnResetCoord() throws java.rmi.RemoteException, JvnException {
 		this.currentOjectId.set(0);
 		this.waitingWriters = new ConcurrentHashMap<Integer,AtomicInteger>();
-		this.jvnObjects 		= new JvnObjectMapCoord();
+		this.jvnObjects 	= new JvnObjectMapCoord();
 		this.objectLocks 	= new ConcurrentHashMap<Integer,Lock>();
 	}
 

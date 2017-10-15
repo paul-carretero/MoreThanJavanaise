@@ -1,9 +1,12 @@
 package tests;
 
 import jvn.JvnException;
-import jvn.JvnLocalServer;
-import jvn.JvnObject;
-import jvn.JvnServerImpl;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnServer.JvnLocalServer;
+import jvn.jvnServer.JvnServerImpl;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -28,7 +31,7 @@ public class AutonomousTester {
 		}
 		iteration = Integer.parseInt(args[2]);	
 		
-		System.out.println("[WORKER "+ id + "]: STARTED");
+		System.out.println("[WORKER "+ id + "]: STARTED @ "+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
 		
 		JvnLocalServer js = JvnServerImpl.jvnGetServer();
 				
@@ -48,7 +51,8 @@ public class AutonomousTester {
 			startBarrier.jvnUnLock();
 		}
 		
-		System.out.println("[WORKER "+ id + "]: SYNCHRONIZED");
+		System.out.println("[WORKER "+ id + "]: SYNCHRONIZED @ " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
+		
 		
 		int res = doBoringWork();	
 		
@@ -65,7 +69,7 @@ public class AutonomousTester {
 		int res = 0;
 		boolean wait = true;
 		System.out.print("[WORKER "+ id + "]: ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░");
-		int n = iteration/50;
+		int n = Math.max(1, iteration/50);
 		int toremove = 50;
 		for (int i = 0; i < iteration; i++) {
 			if(i % n == 0) {

@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import jvn.JvnException;
-import jvn.JvnObject;
-import jvn.JvnServerImpl;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnServer.JvnServerImpl;
 
 public class JvnLocalServerTest {
 
@@ -21,8 +21,8 @@ public class JvnLocalServerTest {
 	@Before
 	public void setUp() throws Exception {
 		this.js.clearCache(true);
-
-		assertNull("Vérification que les serveurs sont vide", this.js.jvnLookupObject("0"));		
+		assertNull("Vérification que les serveurs sont vide", this.js.jvnLookupObject("0"));
+		populate();
 	}
 
 	private void populate() throws JvnException {
@@ -36,7 +36,6 @@ public class JvnLocalServerTest {
 
 	@Test(timeout = 1000)
 	public void localBurnNotNull() throws JvnException {
-		populate();
 		for (Integer i = 0; i < ITERATION; i++) {
 			assertNotNull("Vérification que les objets ont bien été créé", this.js.jvnLookupObject(i.toString()));
 		}
@@ -44,7 +43,6 @@ public class JvnLocalServerTest {
 
 	@Test(timeout = 1000)
 	public void localBurnEqual() throws JvnException {
-		populate();
 		for (Integer i = 0; i < ITERATION; i++) {
 			assertEquals("Vérification que les objets créé sont OK", i.toString(), this.js.jvnLookupObject(i.toString()).jvnGetObjectState().toString());
 		}
@@ -52,7 +50,6 @@ public class JvnLocalServerTest {
 
 	@Test(timeout = 1000)
 	public void localLRUCacheTest() throws JvnException {
-		populate();
 		long start;
 		long end;
 		long tps1;

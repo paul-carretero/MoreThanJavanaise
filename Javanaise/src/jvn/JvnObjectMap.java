@@ -3,46 +3,46 @@ package jvn;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class JvnObjectMap {
+import jvn.jvnObject.JvnObject;
+
+/**
+ * @author Paul Carretero
+ * Base pour la gestion d'une collection d'objet javanaise
+ */
+public abstract class JvnObjectMap {
 
 
+	/**
+	 * Map des objet Javanaise
+	 */
 	protected Map<String, JvnObject> LocalsJvnObject;
+	/**
+	 * Map associant un id d'objet à son nom
+	 */
 	protected Map<Integer,String> assocMap;
 
+	/**
+	 * Instancie une instance de map d'objet JvnObject.
+	 * Fourni une methode get pour y acceder en fonction de leur nom ou de leur id
+	 */
 	public JvnObjectMap() {
 		this.LocalsJvnObject	= new ConcurrentHashMap<String, JvnObject>();
 		this.assocMap			= new ConcurrentHashMap<Integer, String>();
 	}
 
-	public JvnObject get(int joi) {
+	/**
+	 * @param joi l'id de l'objet à rechercher
+	 * @return l'objet associé à cet id ou null si il est absent
+	 */
+	public JvnObject get(final int joi) {
 		return this.LocalsJvnObject.get(this.assocMap.get(joi));
 	}
 
-	public JvnObject get(String jon) {
-		synchronized(jon.intern()){
-			return this.LocalsJvnObject.get(jon);
-		}
-	}
-	
 	/**
-	 * On a besoin de la synchronization car deux serveur peuvent enregistré un meme objet (même nom) en même temps
-	 * @param jo
-	 * @param jon
-	 * @param js
-	 * @throws JvnException
+	 * @param jon le nom de l'objet à rechercher
+	 * @return l'objet associé à ce nom ou null si il est absent
 	 */
-	public void put(JvnObject jo, String jon, JvnRemoteServer js) throws JvnException {
-		synchronized(jon.intern()){
-			if(this.assocMap.containsKey(jo.jvnGetObjectId())) {
-				this.LocalsJvnObject.put(jon, jo);
-				this.assocMap.put(jo.jvnGetObjectId(),jon);
-				jo.jvnInvalidateWriter();
-			}
-			else {
-				this.LocalsJvnObject.put(jon, jo);
-				this.assocMap.put(jo.jvnGetObjectId(),jon);
-			}
-		}
+	public JvnObject get(final String jon) {
+		return this.LocalsJvnObject.get(jon);
 	}
-
 }

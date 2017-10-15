@@ -10,6 +10,8 @@ package irc;
 import java.awt.*;
 import java.awt.event.*;
 import jvn.*;
+import jvn.jvnObject.JvnObject;
+import jvn.jvnServer.JvnServerImpl;
 
 
 public class Irc {
