@@ -27,9 +27,10 @@ public interface JvnObject extends Serializable {
 
 	/**
 	 * Get a Write lock on the object 
+	 * @return true normal, false si on a pas pu upgrade (et où le lock en lecture à été perdu entre temps)
 	 * @throws JvnException
 	 **/
-	public void jvnLockWrite() throws jvn.JvnException; 
+	public boolean jvnLockWrite() throws jvn.JvnException; 
 
 	/**
 	 * Unlock  the object 
@@ -103,5 +104,6 @@ public interface JvnObject extends Serializable {
 	 * Réveil les eventuelle thread en attente de verrou en lecture sur cet objet et met à jour la valeur de l'objet encapsulé
 	 * @param o un objet serializable encapsuler dans ce JvnObject
 	 */
-	public void notifyWaitingReader(Serializable o);
+	public void notifyWaiters(Serializable o);
+
 }

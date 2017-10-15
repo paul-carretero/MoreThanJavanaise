@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -29,18 +30,18 @@ import java.net.MalformedURLException;
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 
-	private static final long 	serialVersionUID = 1L;
-	private static final String HOST = "//localhost/";
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID				= 5217895175945110282L;
+	private static final int MAX_WAIT_TIME_BEFORE_QUEUEING	= 20;
+	private static final boolean TRYLOCK_ON_READ			= false;
+	private static final String HOST 						= "//localhost/";
+
 	private final AtomicInteger currentOjectId;
 	private Map<Integer,AtomicInteger> 	waitingWriters;
 	private Map<Integer,Lock> 			objectLocks;
 	private final Executor				threadPool;
-
-	/**
-	 * priorité des demande de verrou en écriture par rapport aux demande de verrou en lecture
-	 * 0 = pas de priorité, 1 priorité totale
-	 */
-	//private static final double WRITER_PRIORITY = 0.25d;
 
 	/**
 	 * Ensemble Objets JVN stockés
@@ -103,18 +104,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		return this.jvnObjects.get(jon);
 	}
 
-
-	/*AtomicInteger ww = this.waitingWriters.get(joi);
-	if(ww != null && ww.get() > 1){
-		synchronized (ww) {
-			try {
-				ww.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}*/
-
 	/**
 	 * Get a Read lock on a JVN object managed by a given JVN server 
 	 * @param joi : the JVN object identification
@@ -124,26 +113,32 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 **/
 	@Override
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		if(this.waitingWriters.get(joi).get() == 0 && this.objectLocks.get(joi).tryLock()) {
-			Serializable o = jvnLockReadHandler(joi,js);
-			this.objectLocks.get(joi).unlock();
-			return o;
+		if(TRYLOCK_ON_READ) {
+			if(this.waitingWriters.get(joi).get() == 0 && this.objectLocks.get(joi).tryLock()) {
+				Serializable o = jvnLockReadHandler(joi,js);
+				this.objectLocks.get(joi).unlock();
+				return o;
+			}
+			this.threadPool.execute(new JvnCoordNotifyWorker(this, joi, js, true));
+			return null;
 		}
-		this.threadPool.execute(new JvnCoordNotifyWorker(this, joi, js));
-		return null;
+		waitOnWW(joi);
+		return jvnLockReadHandler(joi,js);
 	}
 
 	public Serializable jvnLockReadHandler(int joi, JvnRemoteServer js) throws RemoteException, JvnException {
 		this.objectLocks.get(joi).lock();
-		if(!this.jvnObjects.getWritingServer(joi).equals(js)) {
+		if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
 			this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriterForReader(joi));
+			this.jvnObjects.addReadingServer(joi, this.jvnObjects.getWritingServer(joi));
+			this.jvnObjects.setWritingServer(joi, null);
 		}
 		this.jvnObjects.addReadingServer(joi, js);
 		Serializable o = this.jvnObjects.get(joi).jvnGetObjectState();
 		this.objectLocks.get(joi).unlock();
 		return o;
 	}
-	
+
 	/**
 	 * met le thread en attente (1 seule fois) si il y a des demande de verou en écriture sur cet objet
 	 * @param joi id d'un objet javanaise
@@ -161,6 +156,31 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 		}
 	}
 
+	public Serializable jvnLockWriteHandler(int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+		this.objectLocks.get(joi).lock();
+
+		if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
+			this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriter(joi));
+		}
+		
+		for(JvnRemoteServer server : this.jvnObjects.getReadingServer(joi)) {
+			if(!server.equals(js)) {
+				server.jvnInvalidateReader(joi);
+			}
+		}
+		this.jvnObjects.resetReadingServer(joi);
+
+		this.jvnObjects.setWritingServer(joi, js);
+		this.waitingWriters.get(joi).decrementAndGet();
+		synchronized (this.waitingWriters.get(joi)) {
+			this.waitingWriters.get(joi).notifyAll();
+		}
+
+		Serializable o = this.jvnObjects.get(joi).jvnGetObjectState();
+		this.objectLocks.get(joi).unlock();
+		return o;
+	}
+
 	/**
 	 * Get a Write lock on a JVN object managed by a given JVN server 
 	 * @param joi : the JVN object identification
@@ -169,27 +189,19 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	@Override
-	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
 		this.waitingWriters.get(joi).incrementAndGet();
-		this.objectLocks.get(joi).lock();
-
-		if(!this.jvnObjects.getWritingServer(joi).equals(js)) {
-			this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriter(joi));
-		}
-		for(JvnRemoteServer server : this.jvnObjects.getReadingServer(joi)) {
-			if(!server.equals(js)) {
-				server.jvnInvalidateReader(joi);
+		try {
+			if(this.objectLocks.get(joi).tryLock(MAX_WAIT_TIME_BEFORE_QUEUEING, TimeUnit.MILLISECONDS)) {
+				Serializable o = jvnLockWriteHandler(joi,js);
+				this.objectLocks.get(joi).unlock();
+				return o;
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		this.jvnObjects.setWritingServer(joi, js);
-		this.waitingWriters.get(joi).decrementAndGet();
-		synchronized (this.waitingWriters.get(joi)) {
-			this.waitingWriters.get(joi).notifyAll();
-		}
-		
-		Serializable o = this.jvnObjects.get(joi).jvnGetObjectState();
-		this.objectLocks.get(joi).unlock();
-		return o;
+		this.threadPool.execute(new JvnCoordNotifyWorker(this, joi, js, false));
+		return null;
 	}
 
 	/**

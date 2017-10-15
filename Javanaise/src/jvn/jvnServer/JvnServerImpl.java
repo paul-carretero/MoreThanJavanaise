@@ -260,8 +260,8 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	}
 
 	@Override
-	public void notifyForReadLock(final int joi, final Serializable o) throws RemoteException {
-		this.LocalsJvnObject.get(joi).notifyWaitingReader(o);
+	public void notifyForReadWriteLock(final int joi, final Serializable o) throws RemoteException {
+		this.LocalsJvnObject.get(joi).notifyWaiters(o);
 	}
 }
 

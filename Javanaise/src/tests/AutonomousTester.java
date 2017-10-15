@@ -43,12 +43,18 @@ public class AutonomousTester {
 		startBarrier.jvnUnLock();
 						
 		boolean keepDreaming = true;
-		while(keepDreaming) {
+		int i = 0;
+		while(keepDreaming && i < Integer.MAX_VALUE) {
+			i++;
 			startBarrier.jvnLockRead();
+			//System.out.println(startBarrier);
 			if(((AtomicInteger) startBarrier.jvnGetObjectState()).get() <= 0) {
 				keepDreaming = false;				
 			}
 			startBarrier.jvnUnLock();
+		}
+		if(i == Integer.MAX_VALUE ) {
+			System.out.println(42/0);
 		}
 		
 		System.out.println("[WORKER "+ id + "]: SYNCHRONIZED @ " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));

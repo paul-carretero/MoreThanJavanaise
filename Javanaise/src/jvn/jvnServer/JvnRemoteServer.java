@@ -50,7 +50,7 @@ public interface JvnRemoteServer extends Remote {
 	 * @param o le nouvel objet applicatif contenu dans l'objet javanaise associé à cet id (pour mise à jour du cache local)
 	 * @throws RemoteException
 	 */
-	public void notifyForReadLock(int joi, Serializable o) throws java.rmi.RemoteException;
+	public void notifyForReadWriteLock(int joi, Serializable o) throws java.rmi.RemoteException;
 }
 
 

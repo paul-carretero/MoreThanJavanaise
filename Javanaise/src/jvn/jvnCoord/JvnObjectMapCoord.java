@@ -50,6 +50,10 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 	public List<JvnRemoteServer> getReadingServer(int joi){
 		return this.readingServer.get(joi);
 	}
+	
+	public void resetReadingServer(int joi) {
+		this.readingServer.put(joi, new CopyOnWriteArrayList<JvnRemoteServer>());
+	}
 
 	public JvnRemoteServer getWritingServer(int joi){
 		return this.writingServer.get(joi);
@@ -64,7 +68,12 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 	}
 
 	public void setWritingServer(int joi, JvnRemoteServer js ) {
-		this.writingServer.put(joi, js);
+		if(js == null) {
+			this.writingServer.remove(joi);
+		}
+		else {
+			this.writingServer.put(joi, js);
+		}
 	}
 
 	public void cleanUpServer(JvnRemoteServer js) {

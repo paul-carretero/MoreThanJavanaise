@@ -1,7 +1,8 @@
 package jvn.jvnObject;
 
 import java.io.Serializable;
-
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import jvn.JvnException;
 import jvn.jvnServer.JvnLocalServer;
 import jvn.jvnServer.JvnServerImpl;
@@ -42,7 +43,7 @@ public class JvnObjectImpl implements JvnObject {
 		 */
 		WRITECACHEDREAD;
 	}
-	
+
 	/**
 	 * serialVersionUID
 	 */
@@ -69,11 +70,11 @@ public class JvnObjectImpl implements JvnObject {
 	 * etat du verrou sur cet objet sur le serveur local
 	 */
 	private volatile LockState	lock;
-	
+
 	/**
 	 * monitor pour l'attente d'un verrou en lecture
 	 */
-	private final String waitForReadLockNotify	= "waitForReadLockNotify";
+	private final Lock appLevelLock;
 
 	/**
 	 * @param jvnObjectId
@@ -84,6 +85,7 @@ public class JvnObjectImpl implements JvnObject {
 		this.jvnObjectId 		= jvnObjectId;
 		this.lock				= LockState.WRITE;
 		this.HasBeenInvalidated	= false;
+		this.appLevelLock		= new ReentrantLock(true);
 	}
 
 	/**
@@ -129,37 +131,51 @@ public class JvnObjectImpl implements JvnObject {
 		}
 		return true;
 	}
-	
-	@Override
-	public void jvnLockRead() throws JvnException {
-		if(!jvnLockReadHandler()) {
-			synchronized(this.waitForReadLockNotify) {
-				try {
-					this.waitForReadLockNotify.wait();
-					this.lock = LockState.READ;
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
 
 	@Override
-	synchronized public void jvnLockWrite() throws JvnException {
+	synchronized public void jvnLockRead() throws JvnException {
+		this.appLevelLock.lock();
+		if(!jvnLockReadHandler()) {
+			try {
+				this.wait();
+				this.lock = LockState.READ;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		this.appLevelLock.unlock();
+	}
+
+	synchronized public boolean jvnLockWriteHandler() throws JvnException {
+		Serializable o;
 		switch (this.lock) {
 		case NOLOCK:
-			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
+			o = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
+			if(o == null) {
+				return false;
+			}
+			this.serializableObject = o;
 			this.lock = LockState.WRITE;
 			break;
 		case READCACHED:
-			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
+			o = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
+			if(o == null) {
+				return false;
+			}
+			this.serializableObject = o;
 			this.lock = LockState.WRITE;
 			break;
 		case WRITECACHED:
 			this.lock = LockState.WRITE;
 			break;
 		case READ:
-			this.serializableObject = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
+			this.lock = LockState.READCACHED;
+			this.notifyAll();
+			o = LOCAL_SERVER.jvnLockWrite(this.jvnGetObjectId());
+			if(o == null) {
+				return false;
+			}
+			this.serializableObject = o;
 			this.lock = LockState.WRITE;
 			break;
 		case WRITE:
@@ -169,27 +185,41 @@ public class JvnObjectImpl implements JvnObject {
 			this.lock = LockState.WRITE;
 			break;
 		default:
-			// impossible
-			break;
+			throw new JvnException("etat du verrou inconsistant sur l'objet");
 		}
+		return true;
 	}
-	
+
 	@Override
-	synchronized public void notifyWaitingReader(Serializable o) {
-		this.lock = LockState.READ;
-		this.serializableObject = o;
-		synchronized(this.waitForReadLockNotify) {
-			this.waitForReadLockNotify.notifyAll();
+	synchronized public boolean jvnLockWrite() throws JvnException {
+		this.appLevelLock.lock();
+		boolean askForUpgrade = this.lock == LockState.READ;
+		boolean res = true;
+		if(!jvnLockWriteHandler()) {
+			try {
+				this.wait();
+				res = (!askForUpgrade || this.lock == LockState.READCACHED);
+				this.lock = LockState.WRITE;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
+		this.appLevelLock.unlock();
+		return res;
 	}
-	
-	
+
+	@Override
+	synchronized public void notifyWaiters(Serializable o) {
+		this.serializableObject = o;
+		this.notifyAll();
+	}
 
 	/**
 	 *
 	 */
 	@Override
 	synchronized public boolean jvnUnLock() throws JvnException {
+		this.appLevelLock.lock();
 		if(this.HasBeenInvalidated) {
 			this.HasBeenInvalidated	= false;
 			this.lock 				= LockState.NOLOCK;
@@ -217,6 +247,7 @@ public class JvnObjectImpl implements JvnObject {
 			this.lock = LockState.NOLOCK;
 		}
 		this.notifyAll();
+		this.appLevelLock.unlock();
 		return true;
 	}
 
