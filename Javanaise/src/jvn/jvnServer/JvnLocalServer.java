@@ -8,7 +8,7 @@
 package jvn.jvnServer;
 import java.io.Serializable;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 
 /**
@@ -26,7 +26,7 @@ public interface JvnLocalServer {
 	 * @return the JVN object 
 	 * @throws JvnException
 	 **/
-	public  JvnObject jvnCreateObject(Serializable jos) throws jvn.JvnException ; 
+	public  JvnObject jvnCreateObject(Serializable jos) throws jvn.jvnExceptions.JvnException ; 
 
 	/**
 	 * Associate a symbolic name with a JVN object
@@ -34,7 +34,7 @@ public interface JvnLocalServer {
 	 * @param jo : the JVN object 
 	 * @throws JvnException
 	 **/
-	public  void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException; 
+	public  void jvnRegisterObject(String jon, JvnObject jo) throws jvn.jvnExceptions.JvnException; 
 
 	/**
 	 * Get the reference of a JVN object associated to a symbolic name
@@ -42,7 +42,7 @@ public interface JvnLocalServer {
 	 * @return the JVN object 
 	 * @throws JvnException
 	 **/
-	public  JvnObject jvnLookupObject(String jon) throws jvn.JvnException ; 
+	public  JvnObject jvnLookupObject(String jon) throws jvn.jvnExceptions.JvnException ; 
 
 
 	/**
@@ -66,7 +66,7 @@ public interface JvnLocalServer {
 	 * The JVN service is not used anymore by the application
 	 * @throws JvnException
 	 **/
-	public void jvnTerminate() throws jvn.JvnException; 
+	public void jvnTerminate() throws jvn.jvnExceptions.JvnException; 
 	
 	/**
 	 * principalement utile pour les tests pour réinitialiser les serveur

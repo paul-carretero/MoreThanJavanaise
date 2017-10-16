@@ -3,7 +3,8 @@ package jvn.jvnObject;
 import java.io.Serializable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import jvn.JvnException;
+
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnServer.JvnLocalServer;
 import jvn.jvnServer.JvnServerImpl;
 

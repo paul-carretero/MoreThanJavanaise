@@ -22,4 +22,26 @@ public class Shared {
  * TODO
  * gestion des erreurs
  * supprimé les synchro inutile...
+ * remplacer boolean return avec une exception si lock invalidé
+ * récupérer la valeur des objets ayant un verrou en écriture sur le serveur lors de terminate
+ * 
+ * implémenter transaction:
+ * begin transaction
+ * -> aquisition des verrou au fur à mesure des demande sans relachement
+ * end transaction : unlock des verrou utilisés
+ * transaction monothreadée (aucune aquisition de verrou par d'autre thread)
+ * 
+ * multithreading serveur:
+ * chaque thread peut demander des verrous de manière indépendante
+ * le serveur tentera d'obtenir le meilleur verrou
+ * 
+ * gestion panne serveur:
+ * prévoir rollback coordinateur sur exception rmi
+ * clear serveur après
+ * 
+ * gestion panne coordinateur
+ * aucune aquisition de verrou supplémentaire pour les serveurs
+ * le serveur doit enregistré la map des objet sur txt
+ * en cas de redémarrage impromptu recharge cette map
+ * timeout des serveur si plus possible de contacter coord
  */

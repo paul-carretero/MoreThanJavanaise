@@ -9,7 +9,7 @@ package jvn.jvnObject;
 
 import java.io.*;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 
 /**
  * Interface of a JVN object. 
@@ -23,21 +23,21 @@ public interface JvnObject extends Serializable {
 	 * Get a Read lock on the object 
 	 * @throws JvnException
 	 **/
-	public void jvnLockRead() throws jvn.JvnException; 
+	public void jvnLockRead() throws jvn.jvnExceptions.JvnException; 
 
 	/**
 	 * Get a Write lock on the object 
 	 * @return true normal, false si on a pas pu upgrade (et où le lock en lecture à été perdu entre temps)
 	 * @throws JvnException
 	 **/
-	public boolean jvnLockWrite() throws jvn.JvnException; 
+	public boolean jvnLockWrite() throws jvn.jvnExceptions.JvnException; 
 
 	/**
 	 * Unlock  the object 
 	 * @return true cas normal, false si verrou invalidé par le coordinateur
-	 * @throws jvn.JvnException
+	 * @throws jvn.jvnExceptions.JvnException
 	 */
-	public boolean jvnUnLock() throws jvn.JvnException; 
+	public boolean jvnUnLock() throws jvn.jvnExceptions.JvnException; 
 
 
 	/**
@@ -51,28 +51,28 @@ public interface JvnObject extends Serializable {
 	 * @return l'objet applicatif encapsuler dans cet objet javanaise
 	 * @throws JvnException
 	 **/
-	public Serializable jvnGetObjectState()	throws jvn.JvnException; 
+	public Serializable jvnGetObjectState()	throws jvn.jvnExceptions.JvnException; 
 
 
 	/**
 	 * Invalidate the Read lock of the JVN object 
 	 * @throws JvnException
 	 **/
-	public void jvnInvalidateReader() throws jvn.JvnException;
+	public void jvnInvalidateReader() throws jvn.jvnExceptions.JvnException;
 
 	/**
 	 * Invalidate the Write lock of the JVN object  
 	 * @return the current JVN object state
 	 * @throws JvnException
 	 **/
-	public Serializable jvnInvalidateWriter()	throws jvn.JvnException;
+	public Serializable jvnInvalidateWriter()	throws jvn.jvnExceptions.JvnException;
 
 	/**
 	 * Reduce the Write lock of the JVN object 
 	 * @return the current JVN object state
 	 * @throws JvnException
 	 **/
-	public Serializable jvnInvalidateWriterForReader() throws jvn.JvnException;	
+	public Serializable jvnInvalidateWriterForReader() throws jvn.jvnExceptions.JvnException;	
 	
 	/**
 	 * met à jour un l'objet application encapsule dans un JvnObject

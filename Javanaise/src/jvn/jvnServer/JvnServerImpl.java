@@ -13,8 +13,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import jvn.JvnException;
 import jvn.jvnCoord.JvnRemoteCoord;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnObject.JvnObjectImpl;
 
@@ -93,15 +93,19 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 
 	/**
 	 * The JVN service is not used anymore
+	 * TODO upload writelocked object
 	 * @throws JvnException
 	 **/
 	@Override
-	public void jvnTerminate() throws jvn.JvnException {
+	public void jvnTerminate() throws jvn.jvnExceptions.JvnException {
 		try {
-			this.jvnRemoteCoord.jvnTerminate(this);
+			if(js != null) {
+				this.jvnRemoteCoord.jvnTerminate(this);
+				js = null;
+			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
-			throw new jvn.JvnException("Error during termination of local server");
+			throw new jvn.jvnExceptions.JvnException("Error during termination of local server");
 		}
 	} 
 
@@ -111,7 +115,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws JvnException
 	 **/
 	@Override
-	public JvnObject jvnCreateObject(final Serializable o) throws jvn.JvnException { 
+	public JvnObject jvnCreateObject(final Serializable o) throws jvn.jvnExceptions.JvnException { 
 		try {
 			return new JvnObjectImpl(this.jvnRemoteCoord.jvnGetObjectId(), o);
 		} catch (RemoteException e) {
@@ -127,7 +131,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws JvnException
 	 **/
 	@Override
-	public void jvnRegisterObject(final String jon, final JvnObject jo) throws jvn.JvnException {
+	public void jvnRegisterObject(final String jon, final JvnObject jo) throws jvn.jvnExceptions.JvnException {
 		synchronized (jon.intern()) {
 			try {
 				this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
@@ -146,7 +150,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws JvnException
 	 **/
 	@Override
-	public JvnObject jvnLookupObject(final String jon) throws jvn.JvnException {
+	public JvnObject jvnLookupObject(final String jon) throws jvn.jvnExceptions.JvnException {
 		synchronized (jon.intern()) {
 			JvnObject jvnObj = this.LocalsJvnObject.get(jon);
 			if (jvnObj != null){
@@ -205,7 +209,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public void jvnInvalidateReader(final int joi) throws java.rmi.RemoteException,jvn.JvnException {
+	public void jvnInvalidateReader(final int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException {
 		this.LocalsJvnObject.get(joi).jvnInvalidateReader();
 	}
 
@@ -216,7 +220,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriter(final int joi) throws java.rmi.RemoteException,jvn.JvnException { 
+	public Serializable jvnInvalidateWriter(final int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException { 
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
@@ -229,7 +233,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriterForReader(final int joi) throws java.rmi.RemoteException,jvn.JvnException { 
+	public Serializable jvnInvalidateWriterForReader(final int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException { 
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;

@@ -8,18 +8,21 @@
 
 package irc;
 
-public class Sentence implements java.io.Serializable {
+public class Sentence implements SentenceItf {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -5744335023076980519L;
 	String 		data;
   
 	public Sentence() {
 		this.data = new String("");
 	}
 	
+	@Override
 	public void write(String text) {
 		this.data = text;
 	}
+	
+	@Override
 	public String read() {
 		return this.data;	
 	}

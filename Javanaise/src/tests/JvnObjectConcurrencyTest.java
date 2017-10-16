@@ -7,12 +7,16 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import jvn.JvnException;
-import jvn.jvnObject.JvnObjectImpl;
 
-public class JvnObjectConcurrency_Test {
+import jvn.jvnExceptions.JvnException;
+import jvn.jvnObject.JvnObjectImpl;
+import jvn.jvnServer.JvnServerImpl;
+
+public class JvnObjectConcurrencyTest {
 	
 	static JvnObjectImpl JvnObjectTest1;
 	static JvnObjectImpl JvnObjectTest2;
@@ -30,6 +34,11 @@ public class JvnObjectConcurrency_Test {
 		JvnObjectTest1 = new JvnObjectImpl(0, "JvnObjectTest1 - ");
 		JvnObjectTest2 = new JvnObjectImpl(1, "JvnObjectTest2 - ");
 		JvnObjectTest3 = new JvnObjectImpl(2, "JvnObjectTest3 - ");
+	}
+	
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
+		JvnServerImpl.jvnGetServer().jvnTerminate();
 	}
 	
 	class JvnObjectWorker extends Thread{

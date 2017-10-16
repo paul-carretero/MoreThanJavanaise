@@ -2,7 +2,7 @@ package jvn.jvnCoord;
 
 import java.rmi.RemoteException;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnCoordNotifyWorker implements Runnable {

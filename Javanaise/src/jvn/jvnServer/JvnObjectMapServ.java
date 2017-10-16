@@ -2,8 +2,8 @@ package jvn.jvnServer;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import jvn.JvnException;
 import jvn.JvnObjectMap;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 
 /**

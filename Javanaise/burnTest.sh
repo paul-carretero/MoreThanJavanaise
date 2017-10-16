@@ -30,6 +30,7 @@ if [ "`ps aux | grep '[r]miregistry'`" = "" ]
 then
     echo " -> Lancement de RMIRegistry"
     eval "rmiregistry&"
+    sleep 10
 fi
 
 echo " -> Nombre de Worker ?"

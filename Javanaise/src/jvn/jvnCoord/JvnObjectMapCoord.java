@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import jvn.JvnException;
 import jvn.JvnObjectMap;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 

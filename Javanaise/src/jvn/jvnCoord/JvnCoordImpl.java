@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
@@ -38,7 +38,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	private static final boolean TRYLOCK_ON_READ			= false;
 	private static final String HOST 						= "//localhost/";
 
-	private final AtomicInteger currentOjectId;
+	private final AtomicInteger 		currentOjectId;
 	private Map<Integer,AtomicInteger> 	waitingWriters;
 	private Map<Integer,Lock> 			objectLocks;
 	private final Executor				threadPool;
@@ -70,7 +70,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public int jvnGetObjectId() throws java.rmi.RemoteException,jvn.JvnException {
+	public int jvnGetObjectId() throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException {
 		return this.currentOjectId.getAndIncrement();
 	}
 
@@ -83,7 +83,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
+	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException{
 		synchronized (jon.intern()) {
 			jo.defaultLock();
 			this.jvnObjects.put(jo, jon, js);
@@ -100,7 +100,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord{
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException{
+	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException{
 		return this.jvnObjects.get(jon);
 	}
 

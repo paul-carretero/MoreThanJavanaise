@@ -9,7 +9,7 @@ package jvn.jvnCoord;
 
 import java.rmi.*;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
@@ -27,7 +27,7 @@ public interface JvnRemoteCoord extends Remote {
 	 *  newly created JVN object)
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public int jvnGetObjectId() throws java.rmi.RemoteException,jvn.JvnException; 
+	public int jvnGetObjectId() throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException; 
 
 	/**
 	 * Associate a symbolic name with a JVN object
@@ -37,7 +37,7 @@ public interface JvnRemoteCoord extends Remote {
 	 * @param js  : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException; 
+	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException; 
 
 	/**
 	 * Get the reference of a JVN object managed by a given JVN server 
@@ -45,7 +45,7 @@ public interface JvnRemoteCoord extends Remote {
 	 * @param js : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException; 
+	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException; 
 
 	/**
 	 * Get a Read lock on a JVN object managed by a given JVN server 

@@ -2,18 +2,21 @@ package tests;
 
 import static org.junit.Assert.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnServerImpl;
 
-public class JvnLocalServerTest {
+public class JvnLocalServerTest implements Serializable{
 
+	private static final long serialVersionUID = -6778422767501106604L;
 	private static final int 	ITERATION 		= 200;
 	private final JvnServerImpl js 				= JvnServerImpl.jvnGetServer();
 	private final List<Integer> actualObject	= new ArrayList<Integer>();
@@ -23,6 +26,11 @@ public class JvnLocalServerTest {
 		this.js.clearCache(true);
 		assertNull("Vérification que les serveurs sont vide", this.js.jvnLookupObject("0"));
 		populate();
+	}
+	
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
+		JvnServerImpl.jvnGetServer().jvnTerminate();
 	}
 
 	private void populate() throws JvnException {

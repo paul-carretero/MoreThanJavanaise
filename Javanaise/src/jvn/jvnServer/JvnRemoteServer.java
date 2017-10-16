@@ -21,27 +21,27 @@ public interface JvnRemoteServer extends Remote {
 	 * Invalidate the Read lock of a JVN object 
 	 * @param joi : the JVN object id
 	 * @throws java.rmi.RemoteException
-	 * @throws jvn.JvnException 
+	 * @throws jvn.jvnExceptions.JvnException 
 	 **/
-	public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException,jvn.JvnException;
+	public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException;
 
 	/**
 	 * Invalidate the Write lock of a JVN object 
 	 * @param joi : the JVN object id
 	 * @return the current JVN object state 
 	 * @throws java.rmi.RemoteException
-	 * @throws jvn.JvnException 
+	 * @throws jvn.jvnExceptions.JvnException 
 	 **/
-	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.JvnException;
+	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException;
 
 	/**
 	 * Reduce the Write lock of a JVN object 
 	 * @param joi : the JVN object id
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException
-	 * @throws jvn.JvnException 
+	 * @throws jvn.jvnExceptions.JvnException 
 	 **/
-	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.JvnException;
+	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException;
 
 	/**
 	 * notify ce serveur local que le verrou en lecture est disponible et met à jour la valeur de l'objet considéré

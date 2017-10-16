@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jvn.JvnException;
 import jvn.jvnCoord.JvnCoordImpl;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnServerImpl;
 

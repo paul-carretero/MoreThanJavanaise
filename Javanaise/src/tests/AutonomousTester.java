@@ -1,6 +1,6 @@
 package tests;
 
-import jvn.JvnException;
+import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnLocalServer;
 import jvn.jvnServer.JvnServerImpl;
