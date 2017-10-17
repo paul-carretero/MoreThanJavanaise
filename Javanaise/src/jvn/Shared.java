@@ -36,7 +36,7 @@ public class Shared {
  * le serveur tentera d'obtenir le meilleur verrou
  * 
  * gestion panne serveur:
- * prévoir rollback coordinateur sur exception rmi
+ * prévoir rollback coordinateur sur exception rmi/timeout
  * clear serveur après
  * 
  * gestion panne coordinateur
@@ -44,4 +44,10 @@ public class Shared {
  * le serveur doit enregistré la map des objet sur txt
  * en cas de redémarrage impromptu recharge cette map
  * timeout des serveur si plus possible de contacter coord
+ * 
+ * coordinateur distribué en charge d'une partie des objets en fonction de leur id attribué par un coordinateur main
+ * coordinateur redondant master/slave
+ * synchro du slave par thread numéroté(par objet) de la part du master
+ * en cas de fail du master les serveurs passent sur le slave
+ * le slave devient master et tente de se connecter à un slave (nouveau basé sur le nom rmi)
  */
