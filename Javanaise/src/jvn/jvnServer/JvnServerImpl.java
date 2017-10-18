@@ -72,7 +72,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 		else {
 			this.rmiRegistry	= LocateRegistry.getRegistry(HOST);
 			this.jvnRemoteCoord = (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord");
-			//TODO demander au coord (qui deviendra load-balancer plutôt) combien de sous-coordinateur il dispose
 		}
 	}
 

@@ -2,8 +2,7 @@ package jvn.jvnCoord.jvnLoadBalancer;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-
-import jvn.jvnCoord.JvnRemoteCoord;
+import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnExceptions.JvnException;
 
 public interface JvnLoadBalancer extends Remote {
@@ -17,31 +16,32 @@ public interface JvnLoadBalancer extends Remote {
 	public int jvnGetObjectId() throws RemoteException, JvnException; 
 	
 	/**
-	 * Informe le LoadBalancer qu'un Coordinateur est inaccessible.
-	 * Le LoadBalancer devra le remplacer par son SLAVE (si ce n'est pas déjà fait)
-	 * Le serveur devra rebind sur la string
-	 * @param jvnCoord un nom de coordinateur en échec
+	 * @return le nombre de coordinateur logique
+	 * @throws RemoteException 
+	 * @throws JvnException 
+	 */
+	public int jvnGetNumberCoord() throws RemoteException, JvnException; 
+	
+	/**
+	 * permet à un coordinateur physique de s'enregistrer
+	 * normalement appelé à au démarage de celui ci
+	 * @param coord un nouveau coordinateur
+	 * @throws RemoteException 
+	 * @throws JvnException 
+	 */
+	public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException; 
+	
+	/**
+	 * @param lb 
+	 * @return
 	 * @throws RemoteException
 	 * @throws JvnException
 	 */
-	public void jvnReSync(String jvnCoord) throws RemoteException, JvnException; 
-	
+	public int jvnLoadBalancerRegister(JvnLoadBalancer lb) throws RemoteException, JvnException;
+
 	/**
-	 * @return un tableau contenant une liste ordonné 
-	 * des database serveur en charge de la gestion des objets.
-	 * de telle sorte que l'objet ayant l'id id doit situé sur le serveur en position (id % length)
+	 * valide temps qu'on ne retourne pas d'exeption
+	 * @throws RemoteException
 	 */
-	public String[] jvnGetCoordName() throws RemoteException, JvnException; 
-	
-	/**
-	 * augment le conteur des id des objet de 1 (de manière atomique)
-	 */
-	public void jvnIncrementCounter() throws RemoteException, JvnException; 
-	
-	/**
-	 * 
-	 * @param coord
-	 * @return 
-	 */
-	public String jvnCoordRegister(JvnRemoteCoord coord) throws RemoteException, JvnException; 
+	public void ping() throws RemoteException;
 }

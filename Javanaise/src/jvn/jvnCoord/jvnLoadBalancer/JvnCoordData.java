@@ -6,13 +6,13 @@ import jvn.jvnCoord.JvnRemoteCoord;
 
 /**
  * @author Paul Carretero
- * Information pour qu'un coordinateur puisse s'initializer
+ * Information pour qu'un coordinateur logique puisse s'initializer
  */
 public class JvnCoordData implements Serializable{
 
 	private static final long			serialVersionUID = 8934045903559447084L;
-	private final String				JvnCoordName;
-	private final JvnCoordCurrentRole	role;
+	private final int					JvnLoadBalancingId;
+	private final JvnCurrentRole		role;
 	private final JvnRemoteCoord 		slave;
 	private final JvnRemoteCoord 		master;
 
@@ -23,25 +23,25 @@ public class JvnCoordData implements Serializable{
 	 * @param slave
 	 * @param master
 	 */
-	public JvnCoordData(String jvnCoordName, JvnCoordCurrentRole role, JvnRemoteCoord slave, JvnRemoteCoord master) {
+	public JvnCoordData(int JvnLoadBalancingId, JvnCurrentRole role, JvnRemoteCoord slave, JvnRemoteCoord master) {
 		super();
-		this.JvnCoordName	= jvnCoordName;
-		this.role			= role;
-		this.slave			= slave;
-		this.master			= master;
+		this.JvnLoadBalancingId	= JvnLoadBalancingId;
+		this.role				= role;
+		this.slave				= slave;
+		this.master				= master;
 	}
 	
 	/**
 	 * @return le nom du coordinateur (RMI)
 	 */
-	public String getJvnCoordName() {
-		return this.JvnCoordName;
+	public int getJvnLoadBalancingId() {
+		return this.JvnLoadBalancingId;
 	}
 
 	/**
 	 * @return le role de ce coordinateur
 	 */
-	public JvnCoordCurrentRole getRole() {
+	public JvnCurrentRole getRole() {
 		return this.role;
 	}
 
