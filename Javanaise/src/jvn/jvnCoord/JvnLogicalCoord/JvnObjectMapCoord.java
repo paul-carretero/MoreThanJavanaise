@@ -1,4 +1,4 @@
-package jvn.jvnCoord;
+package jvn.jvnCoord.JvnLogicalCoord;
 
 import java.io.Serializable;
 import java.util.Iterator;

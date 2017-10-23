@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jvn.jvnCoord.JvnCoordImpl;
 import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnServerImpl;
@@ -92,9 +91,6 @@ public class AutonomousTesterManager {
 		}
 		else if(args[0].equals("tester")) {
 			new AutonomousTester(Arrays.copyOfRange(args,1,args.length));
-		}
-		else {
-			new JvnCoordImpl();
 		}
 	}
 }

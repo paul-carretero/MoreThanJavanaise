@@ -9,14 +9,13 @@
 package jvn.jvnServer;
 
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import jvn.jvnCoord.JvnRemoteCoord;
+import jvn.jvnCoord.JvnLogicalCoord.JvnRemoteCoord;
 import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnObject.JvnObjectImpl;
+import jvn.proxy.CallHandler;
 
 import java.io.*;
 
@@ -32,11 +31,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	private static final long serialVersionUID = 710108656689998806L;
 
 	/**
-	 * Emplacement du registre RMI
-	 */
-	private static final String HOST = "localhost";
-
-	/**
 	 * A JVN server is managed as a singleton 
 	 */
 	private static JvnServerImpl js = null;
@@ -44,17 +38,12 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	/**
 	 * Référence vers le Coordinateur
 	 */
-	private JvnRemoteCoord jvnRemoteCoord;
+	private final JvnRemoteCoord jvnRemoteCoord;
 
 	/**
 	 * "Cache" des objets JVN stockés localements
 	 */
-	private JvnObjectMapServ LocalsJvnObject;
-
-	/**
-	 * Référence vers le registre RMI
-	 */
-	private Registry rmiRegistry;
+	private final JvnObjectMapServ LocalsJvnObject;
 
 	/**
 	 * Default constructor
@@ -65,14 +54,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	private JvnServerImpl(final boolean localOnly) throws Exception {
 		super();
 		this.LocalsJvnObject	= new JvnObjectMapServ();
-		if(localOnly) {
-			this.rmiRegistry	= null;
-			this.jvnRemoteCoord = null;
-		}
-		else {
-			this.rmiRegistry	= LocateRegistry.getRegistry(HOST);
-			this.jvnRemoteCoord = (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord");
-		}
+		this.jvnRemoteCoord 	= new CallHandler();
 	}
 
 	/**
@@ -125,6 +107,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	}
 
 	/**
+	 * TODO : remetre la synchro, désactivé pour pouvoir tester (le coord utilise le même moniteur)
 	 *  Associate a symbolic name with a JVN object
 	 * @param jon : the JVN object name
 	 * @param jo : the JVN object 
@@ -132,7 +115,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public void jvnRegisterObject(final String jon, final JvnObject jo) throws jvn.jvnExceptions.JvnException {
-		synchronized (jon.intern()) {
+		//synchronized (jon.intern()) {
 			try {
 				this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
 				this.LocalsJvnObject.put(jo, jon);
@@ -140,7 +123,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 				e.printStackTrace();
 				throw new JvnException("Erreur lors de l'enregistrement de l'objet");
 			}
-		}
+		//}
 	}
 
 	/**
@@ -252,20 +235,13 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	}
 
 	@Override
-	public void clearCache(final boolean hard) throws JvnException {
-		this.LocalsJvnObject = new JvnObjectMapServ();
-		if(hard && this.jvnRemoteCoord != null) {
-			try {
-				this.jvnRemoteCoord.jvnResetCoord();
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-		}
+	public void notifyForReadWriteLock(final int joi, final Serializable o) throws RemoteException {
+		this.LocalsJvnObject.get(joi).notifyWaiters(o);
 	}
 
 	@Override
-	public void notifyForReadWriteLock(final int joi, final Serializable o) throws RemoteException {
-		this.LocalsJvnObject.get(joi).notifyWaiters(o);
+	public void clearCache(boolean hard) throws JvnException {
+		throw new JvnException();
 	}
 }
 

@@ -5,6 +5,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+
+import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnExceptions.JvnException;
 
 public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implements JvnLoadBalancer {
@@ -48,25 +50,22 @@ public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implem
 	 */
 	protected int currentOjectId;
 
-	/**
-	 * Normalement managé comme un singleton, toutefois pour des raison de test, ce ne sera pas le cas
-	 * En effet on pourra lancer plusieurs instances "destructibles".
-	 * @throws RemoteException
-	 * @throws MalformedURLException
-	 * @throws JvnException
-	 */
-	public JvnAbstractLoadBalancer() throws RemoteException, MalformedURLException, JvnException {
+	protected final JvnRemotePhysical physicalLayer;
+
+	public JvnAbstractLoadBalancer(JvnRemotePhysical physicalLayer) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.rmiRegistry 	= LocateRegistry.getRegistry();
-		this.CoordMap		= new JvnCoordMap();
+		this.CoordMap		= new JvnCoordMap(NUMBER_OF_COORDS_INSTANCE);
 		this.currentOjectId = 0;
+		this.physicalLayer	= physicalLayer;
 	}
 	
-	public JvnAbstractLoadBalancer(JvnCoordMap CoordMap, int currentOjectId) throws RemoteException, MalformedURLException, JvnException {
+	public JvnAbstractLoadBalancer(JvnRemotePhysical physicalLayer, JvnCoordMap CoordMap, int currentOjectId) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.rmiRegistry 	= LocateRegistry.getRegistry();
 		this.CoordMap		= CoordMap;
 		this.currentOjectId = currentOjectId;
+		this.physicalLayer	= physicalLayer;
 	}
 
 	@Override

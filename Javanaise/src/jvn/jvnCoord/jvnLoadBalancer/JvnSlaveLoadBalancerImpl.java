@@ -30,32 +30,32 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	 * @throws JvnException
 	 * @throws NotBoundException
 	 */
-	public JvnSlaveLoadBalancerImpl() throws RemoteException, MalformedURLException, JvnException, NotBoundException {
-		super();
+	public JvnSlaveLoadBalancerImpl(JvnRemotePhysical physicalLayer) throws RemoteException, MalformedURLException, JvnException, NotBoundException {
+		super(physicalLayer);
 		this.master = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
 		this.master.jvnLoadBalancerRegister(this);
 		(new Thread(this)).start();
+		System.out.println("[LOADBALANCER] [SLAVE]");
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	public void run() {
 		boolean alive = true;
 		while(alive) {
 			try {
 				this.master.ping();
-			} catch (RemoteException e) {
+			} catch (@SuppressWarnings("unused") RemoteException e) {
 				alive = false;
 			}
 			try {
 				Thread.sleep(REFRESH_RATE);
-			} catch (InterruptedException e) {
+			} catch (@SuppressWarnings("unused") InterruptedException e) {
 				System.out.println("Goodbye old friend...");
 			}
 		}
 		if(!alive) {
 			try {
-				new JvnMasterLoadBalancerImpl(this.CoordMap, this.currentOjectId); // local
+				new JvnMasterLoadBalancerImpl(this.physicalLayer, this.CoordMap, this.currentOjectId); // local
 			} catch (RemoteException | MalformedURLException | JvnException e) {
 				e.printStackTrace();
 			}
@@ -74,7 +74,12 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	}
 	
 	@Override
-	synchronized public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
+	synchronized public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
+		throw new JvnException("Slave Loadbalancer");
+	}
+
+	@Override
+	public void jvnPhysicalCoordDestroy(JvnRemotePhysical jvnRemotePhysical) throws RemoteException, JvnException {
 		throw new JvnException("Slave Loadbalancer");
 	}
 }

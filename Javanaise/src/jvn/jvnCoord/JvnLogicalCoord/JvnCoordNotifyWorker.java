@@ -1,4 +1,4 @@
-package jvn.jvnCoord;
+package jvn.jvnCoord.JvnLogicalCoord;
 
 import java.rmi.RemoteException;
 
@@ -7,7 +7,7 @@ import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnCoordNotifyWorker implements Runnable {
 
-	private final JvnCoordImpl coord;
+	private final JvnMasterCoordImpl coord;
 	private final int joi;
 	private final JvnRemoteServer js;
 	private final boolean askForRead;
@@ -17,7 +17,7 @@ public class JvnCoordNotifyWorker implements Runnable {
 	 * @param joi
 	 * @param jvnServer
 	 */
-	public JvnCoordNotifyWorker(JvnCoordImpl coord, int joi, JvnRemoteServer jvnServer, boolean askForRead) {
+	public JvnCoordNotifyWorker(JvnMasterCoordImpl coord, int joi, JvnRemoteServer jvnServer, boolean askForRead) {
 		this.coord		= coord;
 		this.joi 		= joi;
 		this.js 		= jvnServer;

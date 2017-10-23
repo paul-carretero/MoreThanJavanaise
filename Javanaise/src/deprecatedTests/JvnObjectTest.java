@@ -1,4 +1,4 @@
-package tests;
+package deprecatedTests;
 
 import static org.junit.Assert.*;
 

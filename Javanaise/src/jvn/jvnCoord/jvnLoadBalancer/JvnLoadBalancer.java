@@ -26,10 +26,11 @@ public interface JvnLoadBalancer extends Remote {
 	 * permet à un coordinateur physique de s'enregistrer
 	 * normalement appelé à au démarage de celui ci
 	 * @param coord un nouveau coordinateur
+	 * @return true si la jvm doit créer un slave loadbalacer, faux sinon
 	 * @throws RemoteException 
 	 * @throws JvnException 
 	 */
-	public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException; 
+	public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException; 
 	
 	/**
 	 * @param lb 
@@ -44,4 +45,6 @@ public interface JvnLoadBalancer extends Remote {
 	 * @throws RemoteException
 	 */
 	public void ping() throws RemoteException;
+
+	public void jvnPhysicalCoordDestroy(JvnRemotePhysical jvnRemotePhysical) throws RemoteException, JvnException;
 }

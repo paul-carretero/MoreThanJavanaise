@@ -15,15 +15,35 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	private static final long serialVersionUID = -71074878096960858L;
 	private JvnLoadBalancer slave;
 
+	/**
+	 * créer depuis une jvm
+	 * @param physicalLayer
+	 * @throws JvnException
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 */
 	public JvnMasterLoadBalancerImpl(JvnRemotePhysical physicalLayer) throws JvnException, RemoteException, MalformedURLException {
-		super();
+		super(physicalLayer);
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
-		this.CoordMap.addPhysicalLayer(physicalLayer, 1);
+		System.out.println("[LOADBALANCER] [MASTER] [1]");
+		this.CoordMap.addPhysicalLayer(physicalLayer);
+		this.CoordMap.initialize();
+		this.CoordMap.start();
 	}
 	
-	public JvnMasterLoadBalancerImpl(JvnCoordMap CoordMap, int currentOjectId) throws JvnException, RemoteException, MalformedURLException {
-		super(CoordMap,currentOjectId);
+	/**
+	 * créer par un slave
+	 * @param CoordMap
+	 * @param currentOjectId
+	 * @throws JvnException
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 */
+	public JvnMasterLoadBalancerImpl(JvnRemotePhysical physicalLayer, JvnCoordMap CoordMap, int currentOjectId) throws JvnException, RemoteException, MalformedURLException {
+		super(physicalLayer, CoordMap,currentOjectId);
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
+		System.out.println("[LOADBALANCER] [MASTER] [2]");
+		this.CoordMap.start();
 	}
 	
 	@Override
@@ -43,14 +63,20 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 		if(this.slave == null) {
 			this.slave = lb;
 			return this.currentOjectId;
-			// should retourne the whole map+id
+			// TODO should retourne the whole map+id
 		}
 		throw new JvnException("Loadbalancer Slave déjà présent");
 	}
 	
 	@Override
-	synchronized public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
+	synchronized public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
 		this.CoordMap.addPhysicalLayer(coord);
+		return (this.slave == null);
+	}
+
+	@Override
+	public void jvnPhysicalCoordDestroy(JvnRemotePhysical jvnRemotePhysical) throws RemoteException, JvnException {
+		this.CoordMap.killAll(jvnRemotePhysical);
 	}
 
 }

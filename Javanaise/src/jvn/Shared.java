@@ -1,5 +1,10 @@
 package jvn;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
  * @author Paul Carretero
  * methodes static partagées entres les objets
@@ -14,6 +19,18 @@ public class Shared {
 	 */
 	public static void log(final String what, final String msg) {
 		System.out.println("["+what+"] : "+msg);
+	}
+	
+	/**
+	 * @param map une map
+	 * @return une map triée par ordre décroissant des valeurs
+	 * @author https://stackoverflow.com/a/2581754
+	 */
+	public static <K, V extends Comparable<? super V>> LinkedHashMap<K, V> sortByValueDesc(LinkedHashMap<K, V> map) {
+	    return map.entrySet()
+	              .stream()
+	              .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
+	              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,(e1, e2) -> e1,LinkedHashMap::new));
 	}
 }
 

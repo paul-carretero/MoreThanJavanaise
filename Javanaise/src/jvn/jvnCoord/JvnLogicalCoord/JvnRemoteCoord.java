@@ -5,7 +5,7 @@
  * Authors: 
  */
 
-package jvn.jvnCoord;
+package jvn.jvnCoord.JvnLogicalCoord;
 
 import java.rmi.*;
 
@@ -72,8 +72,6 @@ public interface JvnRemoteCoord extends Remote {
 	 **/
 	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
 
-	public void jvnResetCoord() throws java.rmi.RemoteException, JvnException;
-
 	/**
 	 * methode permettant d'informer le coordinateur que le serveur distant à éliminé un objet de son cache
 	 * @param joi identifiant d'un objet Javanaise
@@ -82,6 +80,12 @@ public interface JvnRemoteCoord extends Remote {
 	 * @throws JvnException
 	 */
 	public void invalidateKey(int joi, Serializable o, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
+
+	public Serializable jvnLockWrite(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException;
+	
+	public void upgrade() throws RemoteException, JvnException;
+
+	public void kill() throws RemoteException, JvnException;
 
 }
 
