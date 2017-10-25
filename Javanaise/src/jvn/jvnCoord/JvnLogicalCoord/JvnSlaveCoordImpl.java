@@ -24,7 +24,7 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 		super();
 		this.id = id;
 		Naming.rebind(HOST+"JvnCoordSlave_"+ this.id, this);
-		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"]");
+		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"] [UP]");
 	}
 
 	/**
@@ -72,6 +72,7 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 	public void upgrade() throws RemoteException, JvnException {
 		try {
 			new JvnMasterCoordImpl(this.jvnObjects, this.objectLocks, this.waitingWriters, this.id);
+			this.kill();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -88,5 +89,6 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"] [DOWN]");
 	}
 }

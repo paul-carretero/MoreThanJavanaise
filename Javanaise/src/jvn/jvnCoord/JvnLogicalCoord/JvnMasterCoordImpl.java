@@ -50,7 +50,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 			this.syncExecutors[i] = Executors.newSingleThreadExecutor();
 		}
 		Naming.rebind(HOST+"JvnCoord_"+ this.id, this);
-		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [1]");
+		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [NEW] [UP]");
 	}
 	
 	public JvnMasterCoordImpl(JvnObjectMapCoord objectMap, Map<Integer,Lock> objectLocks, Map<Integer,AtomicInteger> waitingWriters, int id) throws RemoteException, MalformedURLException, JvnException {
@@ -67,7 +67,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		this.objectLocks 	= objectLocks;
 		this.jvnObjects		= objectMap;
 		Naming.rebind(HOST+"JvnCoord_"+ this.id, this);
-		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [2]");
+		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [UPGRADE] [UP]");
 	}
 	
 	/**
@@ -239,5 +239,6 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		finally {
 			this.syncLock.writeLock().unlock();
 		}
+		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [DOWN]");
 	}
 }

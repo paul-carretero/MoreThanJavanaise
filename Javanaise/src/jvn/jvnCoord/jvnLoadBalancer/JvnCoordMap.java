@@ -1,17 +1,19 @@
 package jvn.jvnCoord.jvnLoadBalancer;
 
 import java.io.Serializable;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import jvn.jvnCoord.JvnLogicalCoord.JvnRemoteCoord;
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnExceptions.JvnException;
 
@@ -26,9 +28,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 	 */
 	private static final long serialVersionUID = -7390263206317147214L;
 
-	private final Map<JvnRemotePhysical, Map<Integer,JvnRemoteCoord>> masterlists;
+	private final Map<JvnRemotePhysical, Set<Integer>> masterlists;
 
-	private final Map<JvnRemotePhysical, Map<Integer,JvnRemoteCoord>> slavelists;
+	private final Map<JvnRemotePhysical, Set<Integer>> slavelists;
 
 	private final int numberOfCluster;
 
@@ -49,8 +51,8 @@ public class JvnCoordMap extends Thread implements Serializable {
 			this.rmiRegistry	= null;
 			e.printStackTrace();
 		}
-		this.masterlists		= new ConcurrentHashMap<>();
-		this.slavelists	 	 	= new ConcurrentHashMap<>();	
+		this.masterlists		= new LinkedHashMap<>(); // TODO debug seulement (ordre), changer par une hashmap classic en prod
+		this.slavelists	 	 	= new LinkedHashMap<>();	
 		this.numberOfCluster	= numberOfCluster;
 		getSlaveLoadBalancer();
 	}
@@ -71,6 +73,7 @@ public class JvnCoordMap extends Thread implements Serializable {
 
 		try {
 			this.slave			= (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancerSlave");
+			this.slave.ping();
 		} catch (@SuppressWarnings("unused") Exception e) {
 			this.slave			= null;
 			if(this.masterlists.size() > 1 && this.myPhysJVM != null) {
@@ -79,6 +82,7 @@ public class JvnCoordMap extends Thread implements Serializable {
 					Thread.sleep(TIMEOUT);
 					this.slave = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancerSlave");
 				} catch (Exception e1) {
+					System.out.println(e1.getMessage());
 					this.slave = null;
 				}
 			}
@@ -88,22 +92,24 @@ public class JvnCoordMap extends Thread implements Serializable {
 
 	@Override
 	public void run() {
-		heartbeat();
-		try {
-			Thread.sleep(REFRESH);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		while(!isInterrupted()) {
+			heartbeat();
+			try {
+				Thread.sleep(REFRESH);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	synchronized private int getMaxInstancePerJVM() {
 		assert(this.masterlists.size() == this.slavelists.size());
-		return Math.floorDiv((this.numberOfCluster), this.masterlists.size()) + 1;
+		return (int) Math.ceil(2 * Float.valueOf(this.numberOfCluster) / Float.valueOf(this.masterlists.size()));
 	}
 
-	synchronized private boolean containSlave(int id) {
-		for(Entry<JvnRemotePhysical, Map<Integer, JvnRemoteCoord>> slaveEntries : this.slavelists.entrySet()) {
-			if(slaveEntries.getValue().containsKey(id)) {
+	synchronized private boolean haveSlave(int id) {
+		for(Set<Integer> slaves : this.slavelists.values()) {
+			if(slaves.contains(id)) {
 				return true;
 			}
 		}
@@ -112,9 +118,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 
 	synchronized private Set<Integer> getSetOfNoSlaveMaster() {
 		Set<Integer> res = new HashSet<>();
-		for(Entry<JvnRemotePhysical, Map<Integer, JvnRemoteCoord>> masterEntries : this.masterlists.entrySet()) {
-			for(int idCoord : masterEntries.getValue().keySet()) {
-				if(!containSlave(idCoord)) {
+		for(Set<Integer> masterEntries : this.masterlists.values()) {
+			for(int idCoord : masterEntries) {
+				if(!haveSlave(idCoord)) {
 					res.add(idCoord);
 				}
 			}
@@ -124,49 +130,64 @@ public class JvnCoordMap extends Thread implements Serializable {
 
 	synchronized private void launchMissingSlave() {
 		if(this.slavelists.size() > 1) {
-			for(int coordId : getSetOfNoSlaveMaster()) {
+			Set<Integer> noSlaveMaster = getSetOfNoSlaveMaster();
+			for(int coordId : noSlaveMaster) {
 				try {
-					getLessUsedJVMWithoutIdForSlave(coordId).jvnNewSlaveCoordInstance(coordId);
+					JvnRemotePhysical jvm = getLessUsedJVMWithoutIdForSlave(coordId);
+					jvm.jvnNewSlaveCoordInstance(coordId);
+					this.slavelists.get(jvm).add(coordId);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
 			}
 		}
 	}
+	
 
 	synchronized private void reArrangeCoords() {
 		launchMissingSlave();
 		int max = getMaxInstancePerJVM();
-		for(JvnRemotePhysical physJVM : this.slavelists.keySet()) {
-			int amountToMove = (this.masterlists.get(physJVM).size() + this.slavelists.get(physJVM).size()) - max;
-			for(Entry<Integer, JvnRemoteCoord> slaveToMove : this.slavelists.get(physJVM).entrySet()) {
+		for(JvnRemotePhysical oldPhysJVM : this.slavelists.keySet()) {
+			int amountToMove = (this.masterlists.get(oldPhysJVM).size() + this.slavelists.get(oldPhysJVM).size()) - max;
+			
+			for (Iterator<Integer> slaveToMoves = this.slavelists.get(oldPhysJVM).iterator(); slaveToMoves.hasNext();){
+				int slaveToMove = slaveToMoves.next();
 				if(amountToMove > 0) {
-					JvnRemotePhysical candidat = getLessUsedJVMWithoutIdForSlave(slaveToMove.getKey());
-					if(candidat != null && (this.masterlists.get(candidat).size() + this.slavelists.get(candidat).size()) <= max) {
+					JvnRemotePhysical candidatNewJVM = getLessUsedJVMWithoutIdForSlave(slaveToMove);
+					if(candidatNewJVM != null && (this.masterlists.get(candidatNewJVM).size() + this.slavelists.get(candidatNewJVM).size()) < max) {
 						try {
-							slaveToMove.getValue().kill();
-							candidat.jvnNewSlaveCoordInstance(slaveToMove.getKey());
-						} catch (RemoteException | JvnException e) {
+							oldPhysJVM.killCoord(slaveToMove);
+							candidatNewJVM.jvnNewSlaveCoordInstance(slaveToMove);
+							this.slavelists.get(candidatNewJVM).add(slaveToMove);
+						} catch (RemoteException e) {
 							e.printStackTrace();
 						}
-						this.masterlists.get(physJVM).remove(slaveToMove.getKey());
+						slaveToMoves.remove();
 						amountToMove--;
 					}
 				}
 			}
-			for(Entry<Integer, JvnRemoteCoord> masterToMove : this.masterlists.get(physJVM).entrySet()) {
+		}
+		
+		for(JvnRemotePhysical oldPhysJVM : this.masterlists.keySet()) {
+			int amountToMove = (this.masterlists.get(oldPhysJVM).size() + this.slavelists.get(oldPhysJVM).size()) - max;
+			for (Iterator<Integer> masterToMoves = this.masterlists.get(oldPhysJVM).iterator(); masterToMoves.hasNext();){
+				int masterToMove = masterToMoves.next(); 
 				if(amountToMove > 0) {
-					JvnRemotePhysical candidat = getLessUsedJVMWithoutIdForSlave(masterToMove.getKey());
-					JvnRemotePhysical slaveOfIt = getSlaveOfMaster(masterToMove.getKey());
-					if(slaveOfIt != null && candidat != null && (this.masterlists.get(candidat).size() + this.slavelists.get(candidat).size()) <= max) {
+					JvnRemotePhysical candidatNewJVM = getLessUsedJVMWithoutIdForSlave(masterToMove);
+					JvnRemotePhysical slaveOfIt = getSlaveOfMaster(masterToMove);
+					if(slaveOfIt != null && candidatNewJVM != null && (this.masterlists.get(candidatNewJVM).size() + this.slavelists.get(candidatNewJVM).size()) < max) {
 						try {
-							masterToMove.getValue().kill();
-							this.slavelists.get(slaveOfIt).get(masterToMove.getKey()).upgrade();
-							candidat.jvnNewSlaveCoordInstance(masterToMove.getKey());
-						} catch (RemoteException | JvnException e) {
+							oldPhysJVM.killCoord(masterToMove);
+							slaveOfIt.upgradeCoord(masterToMove);
+							candidatNewJVM.jvnNewSlaveCoordInstance(masterToMove);
+							this.slavelists.get(slaveOfIt).remove(masterToMove);
+							this.masterlists.get(slaveOfIt).add(masterToMove);
+							this.slavelists.get(candidatNewJVM).add(masterToMove);
+						} catch (RemoteException e) {
 							e.printStackTrace();
 						}
-						this.masterlists.get(physJVM).remove(masterToMove.getKey());
+						masterToMoves.remove();
 						amountToMove--;
 					}
 				}
@@ -174,29 +195,31 @@ public class JvnCoordMap extends Thread implements Serializable {
 		}
 	}
 
+	@SuppressWarnings("unused")
+	private void printMap() {
+		System.out.println("master:");
+		for(Set<Integer> s: this.masterlists.values()) {
+			System.out.println(s);
+		}
+		System.out.println("slaves:");
+		for(Set<Integer> s: this.slavelists.values()) {
+			System.out.println(s);
+		}
+	}
+
 	synchronized private JvnRemotePhysical getSlaveOfMaster(Integer coordId) {
-		for(Entry<JvnRemotePhysical, Map<Integer, JvnRemoteCoord>> test : this.slavelists.entrySet()) {
-			if(test.getValue().containsKey(coordId)) {
+		for(Entry<JvnRemotePhysical, Set<Integer>> test : this.slavelists.entrySet()) {
+			if(test.getValue().contains(coordId)) {
 				return test.getKey();
 			}
 		}
 		return null;
 	}
 
-	synchronized public void registerSlave(JvnRemotePhysical physicalLayer, JvnRemoteCoord virtualCoord, int id) throws JvnException {
-		JvnRemoteCoord mustBeNull = this.slavelists.get(physicalLayer).put(id,virtualCoord);
-		assert(mustBeNull == null);
-		reArrangeCoords();
-		updateSlave();
-	}
-
-	synchronized public void registerMaster(JvnRemotePhysical physicalLayer, JvnRemoteCoord virtualCoord, int id) throws JvnException {
-		JvnRemoteCoord mustBeNull = this.masterlists.get(physicalLayer).put(id,virtualCoord);
-		assert(mustBeNull == null);
-		reArrangeCoords();
-		updateSlave();
-	}
-
+	/**
+	 * supprime de la base une couche physique (aucune autre action) et reorganize les coordinateur
+	 * @param physicalLayer une jvm physique qui n'existe plus
+	 */
 	synchronized public void removePhysicalLayer(JvnRemotePhysical physicalLayer) {
 		this.masterlists.remove(physicalLayer);
 		this.slavelists.remove(physicalLayer);
@@ -204,9 +227,13 @@ public class JvnCoordMap extends Thread implements Serializable {
 		updateSlave();
 	}
 
+	/**
+	 * Ajoute dans la base une nouvelle JVM physique et reorganize les coordinateurs
+	 * @param physicalLayer une nouvelle jvm physique
+	 */
 	synchronized public void addPhysicalLayer(JvnRemotePhysical physicalLayer) {
-		this.masterlists.put(physicalLayer, new ConcurrentHashMap<>());
-		this.slavelists.put(physicalLayer, new ConcurrentHashMap<>());
+		this.masterlists.put(physicalLayer, new HashSet<>());
+		this.slavelists.put(physicalLayer, new HashSet<>());
 		reArrangeCoords();
 		updateSlave();
 	}
@@ -217,7 +244,7 @@ public class JvnCoordMap extends Thread implements Serializable {
 	 * @param physRemote
 	 * @throws JvnException si il existe déjà un slave pour ce cluster
 	 */
-	synchronized private void startNewCoord(int id, JvnRemotePhysical physRemote) throws JvnException {
+	synchronized private void startMasterCoord(int id, JvnRemotePhysical physRemote) throws JvnException {
 
 		// lancement du coordinateur master
 		try {
@@ -227,11 +254,7 @@ public class JvnCoordMap extends Thread implements Serializable {
 		}
 
 		// enregistrement du coordinateur
-		try {
-			this.masterlists.get(physRemote).put(id,(JvnRemoteCoord) LocateRegistry.getRegistry().lookup("JvnCoord_"+id));
-		} catch (RemoteException | NotBoundException e) {
-			e.printStackTrace();
-		}
+		this.masterlists.get(physRemote).add(id);
 	}
 
 	/**
@@ -243,10 +266,10 @@ public class JvnCoordMap extends Thread implements Serializable {
 		assert(this.slavelists.size() == 1);
 		assert(this.masterlists.size() == 1);
 
-		Entry<JvnRemotePhysical, Map<Integer, JvnRemoteCoord>> physCoord = this.masterlists.entrySet().iterator().next();
+		Entry<JvnRemotePhysical, Set<Integer>> physCoord = this.masterlists.entrySet().iterator().next();
 		for(int i = 0; i < this.numberOfCluster; i++) {
 			try {
-				startNewCoord(i,physCoord.getKey());
+				startMasterCoord(i,physCoord.getKey());
 			} catch (JvnException e) {
 				e.printStackTrace();
 			}
@@ -255,38 +278,42 @@ public class JvnCoordMap extends Thread implements Serializable {
 	}
 
 	synchronized private void heartbeat() {
-		for(JvnRemotePhysical frp : this.masterlists.keySet()) {
+		List<JvnRemotePhysical> tempDead = new LinkedList<>();
+		for(JvnRemotePhysical frp : this.masterlists.keySet()) {	
 			try {
 				frp.ping();
-			} catch (@SuppressWarnings("unused") RemoteException e) {
-				// on récupère la liste des id des coordinateurs qui ont planté
-				Set<Integer> toUpgrade = this.masterlists.get(frp).keySet();
+			} catch (@SuppressWarnings("unused") Exception e) {
+				tempDead.add(frp);
+			}
+		}
+		
+		for(JvnRemotePhysical dead : tempDead) {
+			// on récupère la liste des id des coordinateurs qui ont planté
+			Set<Integer> toUpgrade = this.masterlists.get(dead);
 
-				//cleanup list
-				this.slavelists.remove(frp);
-				this.masterlists.remove(frp);
+			//cleanup list
+			this.slavelists.remove(dead);
+			this.masterlists.remove(dead);
 
-				//on upgrade chaque coordinateur slave correspondant à un id de la liste et on l'ajoute à la masterlist
-				for(Entry<JvnRemotePhysical, Map<Integer, JvnRemoteCoord>> remainingJVM : this.slavelists.entrySet()) {
-					for(Integer idCoord : toUpgrade) {
-						if(remainingJVM.getValue().containsKey(idCoord)) {
-							try {
-								remainingJVM.getValue().get(idCoord).upgrade();
-								this.masterlists.get(remainingJVM.getKey()).put(idCoord, remainingJVM.getValue().get(idCoord));
-								remainingJVM.getValue().remove(idCoord);
-							} catch (RemoteException | JvnException e1) {
-								e1.printStackTrace();
-							}
+			//on upgrade chaque coordinateur slave correspondant à un id de la liste et on l'ajoute à la masterlist
+			for(Entry<JvnRemotePhysical, Set<Integer>> remainingJVM : this.slavelists.entrySet()) {
+				for (Iterator<Integer> coordIds = toUpgrade.iterator(); coordIds.hasNext();){
+					int coordId = coordIds.next();
+					if(remainingJVM.getValue().contains(coordId)) {
+						try {
+							remainingJVM.getKey().upgradeCoord(coordId); // si la remainingJVM a aussi plante
+							this.masterlists.get(remainingJVM.getKey()).add(coordId);
+							coordIds.remove();
+						} catch (RemoteException e1) {
+							e1.printStackTrace();
+							// sa peut planter ici!
 						}
 					}
-					if(remainingJVM.getValue().isEmpty()) {
-						this.slavelists.remove(remainingJVM.getKey());
-					}
 				}
-				// on créer des slave pour ceux qui n'en n'ont pas
-				launchMissingSlave();
-				updateSlave();
 			}
+			// on créer des slave pour ceux qui n'en n'ont pas
+			launchMissingSlave();
+			updateSlave();
 		}
 	}
 
@@ -300,28 +327,25 @@ public class JvnCoordMap extends Thread implements Serializable {
 			} catch (@SuppressWarnings("unused") Exception e) {
 				try {Thread.sleep(TIMEOUT);} catch (@SuppressWarnings("unused") Exception e1) {}
 				try {
-					System.out.println("<1>");
-					getSlaveLoadBalancer();
-					System.out.println("<2>");
-					if(this.slave != null) {
-						System.out.println("<3>");
+					if(getSlaveLoadBalancer() != null) {
 						this.slave.updateJvnCoordMap(this);
-						System.out.println("<4>");
 					}
-					System.out.println("<5>");
-				}catch (Exception e1) {this.slave = null;}
+				}catch (Exception e1) {
+					e1.printStackTrace();
+					this.slave = null;
+				}
 			}
 		}
 	}
 
 	private JvnRemotePhysical getLessUsedJVMWithoutIdForSlave(int id) {
-		JvnRemotePhysical res = null;
-		int instanceOnRes = Integer.MAX_VALUE;
-		int currentInstance = 0;
+		JvnRemotePhysical res	= null;
+		int instanceOnRes 		= Integer.MAX_VALUE;
+		int currentInstance 	= 0;
 		for(JvnRemotePhysical key : this.masterlists.keySet()) {
-			currentInstance = this.masterlists.get(key).size() + this.slavelists.get(key).size();
+			currentInstance 	= this.masterlists.get(key).size() + this.slavelists.get(key).size();
 			if(currentInstance < instanceOnRes) {
-				if(!this.masterlists.get(key).containsKey(id)) {
+				if(!this.masterlists.get(key).contains(id) && !this.slavelists.get(key).contains(id)) {
 					res = key;
 					instanceOnRes = currentInstance;
 				}

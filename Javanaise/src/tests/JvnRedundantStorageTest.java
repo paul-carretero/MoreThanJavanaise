@@ -42,6 +42,7 @@ public class JvnRedundantStorageTest {
 		Thread.sleep(2000);
 	}
 
+	@SuppressWarnings("unused")
 	@After
 	public void tearDown() throws AccessException, RemoteException, NotBoundException, JvnException {
 		for(JvnRemotePhysicalImpl p : physLayer.values()) {

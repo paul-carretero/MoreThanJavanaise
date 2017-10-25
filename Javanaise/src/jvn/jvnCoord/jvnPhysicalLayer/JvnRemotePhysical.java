@@ -21,6 +21,10 @@ public interface JvnRemotePhysical extends Remote {
 	public void jvnNewSlaveLoadBalancer() throws RemoteException;
 
 	public void jvnNewMasterCoordInstance(int id) throws RemoteException;
+	
+	public void killCoord(int coordId) throws RemoteException;
+	
+	public void upgradeCoord(int coordId) throws RemoteException;
 	/**
 	 * vérifie si le coordinateur physique est toujours en vie, retourne une exception sinon
 	 * @throws RemoteException

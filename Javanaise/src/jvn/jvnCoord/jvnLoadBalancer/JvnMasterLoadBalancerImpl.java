@@ -65,16 +65,8 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	}
 	
 	@Override
-	synchronized public int jvnLoadBalancerRegister(JvnLoadBalancer lb) throws RemoteException, JvnException {
-		this.slave = lb;
-		this.CoordMap.updateSlave();
-		return this.currentOjectId;
-	}
-	
-	@Override
-	synchronized public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
+	synchronized public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
 		this.CoordMap.addPhysicalLayer(coord);
-		return (this.slave == null);
 	}
 
 	@Override

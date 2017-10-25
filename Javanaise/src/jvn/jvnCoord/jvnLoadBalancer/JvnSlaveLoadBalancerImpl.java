@@ -35,7 +35,6 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 		super();
 		this.master = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
 		Naming.rebind(HOST_URL+"JvnLoadBalancerSlave", this);
-		this.master.jvnLoadBalancerRegister(this);
 		(new Thread(this)).start();
 		System.out.println("[LOADBALANCER] [SLAVE]");
 	}
@@ -72,12 +71,7 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	}
 	
 	@Override
-	public int jvnLoadBalancerRegister(JvnLoadBalancer lb) throws RemoteException, JvnException {
-		throw new JvnException("Slave Loadbalancer");
-	}
-	
-	@Override
-	public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
+	public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
 		throw new JvnException("Slave Loadbalancer");
 	}
 
