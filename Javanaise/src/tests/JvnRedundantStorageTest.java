@@ -37,8 +37,8 @@ public class JvnRedundantStorageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		physLayer.put(0,new JvnRemotePhysicalImpl());
-		physLayer.put(1,new JvnRemotePhysicalImpl());
+		//physLayer.put(0,new JvnRemotePhysicalImpl());
+		//physLayer.put(1,new JvnRemotePhysicalImpl());
 		Thread.sleep(2000);
 	}
 

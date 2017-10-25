@@ -5,6 +5,7 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
+import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysicalImpl;
 import jvn.jvnExceptions.JvnException;
 
 public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
@@ -22,11 +23,13 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	 * @throws RemoteException
 	 * @throws MalformedURLException
 	 */
-	public JvnMasterLoadBalancerImpl(JvnRemotePhysical physicalLayer) throws JvnException, RemoteException, MalformedURLException {
-		super(physicalLayer);
+	public JvnMasterLoadBalancerImpl() throws JvnException, RemoteException, MalformedURLException {
+		super();
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
 		System.out.println("[LOADBALANCER] [MASTER] [1]");
-		this.CoordMap.addPhysicalLayer(physicalLayer);
+		JvnRemotePhysicalImpl.jvnGetLocalPhysical();
+		JvnRemotePhysicalImpl.jvnGetLocalPhysical();
+		this.CoordMap.addPhysicalLayer(JvnRemotePhysicalImpl.jvnGetLocalPhysical());
 		this.CoordMap.initialize();
 		this.CoordMap.start();
 	}
@@ -39,8 +42,8 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	 * @throws RemoteException
 	 * @throws MalformedURLException
 	 */
-	public JvnMasterLoadBalancerImpl(JvnRemotePhysical physicalLayer, JvnCoordMap CoordMap, int currentOjectId) throws JvnException, RemoteException, MalformedURLException {
-		super(physicalLayer, CoordMap,currentOjectId);
+	public JvnMasterLoadBalancerImpl(JvnCoordMap CoordMap, int currentOjectId) throws JvnException, RemoteException, MalformedURLException {
+		super(CoordMap,currentOjectId);
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
 		System.out.println("[LOADBALANCER] [MASTER] [2]");
 		this.CoordMap.start();
@@ -48,6 +51,9 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	
 	@Override
 	synchronized public int jvnGetObjectId() throws RemoteException, JvnException {
+		if(this.slave == null) {
+			this.slave = this.CoordMap.getSlaveLoadBalancer();
+		}
 		if (this.slave != null) {
 			try {
 				this.slave.jvnGetObjectId();
@@ -60,12 +66,9 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	
 	@Override
 	synchronized public int jvnLoadBalancerRegister(JvnLoadBalancer lb) throws RemoteException, JvnException {
-		if(this.slave == null) {
-			this.slave = lb;
-			return this.currentOjectId;
-			// TODO should retourne the whole map+id
-		}
-		throw new JvnException("Loadbalancer Slave déjà présent");
+		this.slave = lb;
+		this.CoordMap.updateSlave();
+		return this.currentOjectId;
 	}
 	
 	@Override
@@ -75,8 +78,7 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	}
 
 	@Override
-	public void jvnPhysicalCoordDestroy(JvnRemotePhysical jvnRemotePhysical) throws RemoteException, JvnException {
-		this.CoordMap.killAll(jvnRemotePhysical);
+	public void updateJvnCoordMap(JvnCoordMap jcm) throws RemoteException, JvnException {
+		throw new JvnException("I'm a Master");
 	}
-
 }

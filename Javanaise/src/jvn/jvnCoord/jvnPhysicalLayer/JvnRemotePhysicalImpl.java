@@ -24,26 +24,29 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	 * serialVersionUID
 	 */
 	private static final long	serialVersionUID	= -3473522236789019332L;
-		
-	private Registry 			rmiRegistry;
-	
-	private JvnAbstractLoadBalancer myLoadBalancer;
-	
-	private Map<Integer,JvnSlaveCoordImpl> slaveCoords;
 
-	public JvnRemotePhysicalImpl() throws RemoteException {
+	private static JvnRemotePhysicalImpl 	jps;
+		
+	private Registry 						rmiRegistry;
+	
+	private JvnAbstractLoadBalancer 		myLoadBalancer;
+	
+	private Map<Integer,JvnSlaveCoordImpl> 	slaveCoords;
+
+	protected JvnRemotePhysicalImpl() throws RemoteException {
 		super();
 		System.out.println("[PHYSICAL] ["+this.hashCode()+"]");
-		this.slaveCoords	= new HashMap<>();
-		this.rmiRegistry	= LocateRegistry.getRegistry();
-		this.myLoadBalancer = null;
-		boolean shouldCreateSlaveLB = false;
+		this.slaveCoords			= new HashMap<>();
+		this.rmiRegistry			= LocateRegistry.getRegistry();
+		this.myLoadBalancer 		= null;
+		boolean shouldCreateSlaveLB	= false;
+		jps 						= this;
 		
 		try {
-			shouldCreateSlaveLB = ((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordRegister(this);
+			shouldCreateSlaveLB 	= ((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordRegister(this);
 		} catch (JvnException | RemoteException | NotBoundException e) {
 			try {
-				this.myLoadBalancer = new JvnMasterLoadBalancerImpl(this);
+				this.myLoadBalancer = new JvnMasterLoadBalancerImpl();
 			} catch (MalformedURLException | JvnException e1) {
 				e.printStackTrace();
 				System.err.println("--------------------------");
@@ -53,11 +56,22 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 		
 		if(shouldCreateSlaveLB) {
 			try {
-				this.myLoadBalancer = new JvnSlaveLoadBalancerImpl(this);
+				this.myLoadBalancer = new JvnSlaveLoadBalancerImpl();
 			} catch (MalformedURLException | JvnException | NotBoundException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static JvnRemotePhysicalImpl jvnGetLocalPhysical() {
+		if (jps == null){
+			try {
+				jps = new JvnRemotePhysicalImpl();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return jps;
 	}
 	
 	// méthodes remote ////////////////////////////////////////////////////////
@@ -65,7 +79,7 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	@Override
 	public void jvnNewSlaveLoadBalancer() throws RemoteException {
 		try {
-			this.myLoadBalancer = new JvnSlaveLoadBalancerImpl(this);
+			this.myLoadBalancer = new JvnSlaveLoadBalancerImpl();
 		} catch (MalformedURLException | JvnException | NotBoundException e) {
 			e.printStackTrace();
 		}
@@ -91,7 +105,7 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	 */
 	public void jvnNewMasterLoadBalancer() {
 		try {
-			this.myLoadBalancer = new JvnMasterLoadBalancerImpl(this);
+			this.myLoadBalancer = new JvnMasterLoadBalancerImpl();
 		} catch (RemoteException | MalformedURLException | JvnException e) {
 			e.printStackTrace();
 		}
@@ -106,7 +120,7 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	 */
 	public void destroy() {
 		try {
-			((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordDestroy(this);
+			//((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordDestroy(this);
 			this.myLoadBalancer.destroy();
 			this.slaveCoords.forEach((k,v) -> v.kill());
 			UnicastRemoteObject.unexportObject(this,true);

@@ -1,6 +1,7 @@
 package jvn.jvnCoord.jvnLoadBalancer;
 
 import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
@@ -30,32 +31,34 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	 * @throws JvnException
 	 * @throws NotBoundException
 	 */
-	public JvnSlaveLoadBalancerImpl(JvnRemotePhysical physicalLayer) throws RemoteException, MalformedURLException, JvnException, NotBoundException {
-		super(physicalLayer);
+	public JvnSlaveLoadBalancerImpl() throws RemoteException, MalformedURLException, JvnException, NotBoundException {
+		super();
 		this.master = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
+		Naming.rebind(HOST_URL+"JvnLoadBalancerSlave", this);
 		this.master.jvnLoadBalancerRegister(this);
 		(new Thread(this)).start();
 		System.out.println("[LOADBALANCER] [SLAVE]");
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	public void run() {
 		boolean alive = true;
 		while(alive) {
 			try {
 				this.master.ping();
-			} catch (@SuppressWarnings("unused") RemoteException e) {
+			} catch (RemoteException e) {
 				alive = false;
 			}
 			try {
 				Thread.sleep(REFRESH_RATE);
-			} catch (@SuppressWarnings("unused") InterruptedException e) {
+			} catch (InterruptedException e) {
 				System.out.println("Goodbye old friend...");
 			}
 		}
 		if(!alive) {
 			try {
-				new JvnMasterLoadBalancerImpl(this.physicalLayer, this.CoordMap, this.currentOjectId); // local
+				new JvnMasterLoadBalancerImpl(this.CoordMap, this.currentOjectId); // local
 			} catch (RemoteException | MalformedURLException | JvnException e) {
 				e.printStackTrace();
 			}
@@ -69,17 +72,17 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	}
 	
 	@Override
-	synchronized public int jvnLoadBalancerRegister(JvnLoadBalancer lb) throws RemoteException, JvnException {
+	public int jvnLoadBalancerRegister(JvnLoadBalancer lb) throws RemoteException, JvnException {
 		throw new JvnException("Slave Loadbalancer");
 	}
 	
 	@Override
-	synchronized public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
+	public boolean jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
 		throw new JvnException("Slave Loadbalancer");
 	}
 
 	@Override
-	public void jvnPhysicalCoordDestroy(JvnRemotePhysical jvnRemotePhysical) throws RemoteException, JvnException {
-		throw new JvnException("Slave Loadbalancer");
+	public void updateJvnCoordMap(JvnCoordMap jcm) throws RemoteException, JvnException {
+		this.CoordMap = jcm;
 	}
 }

@@ -25,7 +25,6 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 		this.id = id;
 		Naming.rebind(HOST+"JvnCoordSlave_"+ this.id, this);
 		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"]");
-		this.
 	}
 
 	/**

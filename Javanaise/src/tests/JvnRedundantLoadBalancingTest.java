@@ -35,8 +35,8 @@ public class JvnRedundantLoadBalancingTest {
 
 	@Before
 	public void setUp() throws Exception {
-		physLayer.put(0,new JvnRemotePhysicalImpl());
-		physLayer.put(1,new JvnRemotePhysicalImpl());
+		//physLayer.put(0,new JvnRemotePhysicalImpl());
+		//physLayer.put(1,new JvnRemotePhysicalImpl());
 		Thread.sleep(400);
 		rmiLoadBalancer = (JvnLoadBalancer) JvnRedundantLoadBalancingTest.rmiRegistry.lookup("JvnLoadBalancer");
 	}

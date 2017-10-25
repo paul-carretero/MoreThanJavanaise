@@ -45,6 +45,6 @@ public interface JvnLoadBalancer extends Remote {
 	 * @throws RemoteException
 	 */
 	public void ping() throws RemoteException;
-
-	public void jvnPhysicalCoordDestroy(JvnRemotePhysical jvnRemotePhysical) throws RemoteException, JvnException;
+	
+	public void updateJvnCoordMap(JvnCoordMap jcm) throws RemoteException, JvnException;
 }
