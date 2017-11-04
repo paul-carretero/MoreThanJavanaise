@@ -23,12 +23,12 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	/**
 	 * serialVersionUID
 	 */
-	protected static final long serialVersionUID = -5906347883903342080L;
+	protected static final long serialVersionUID 			 = -5906347883903342080L;
 	protected static final int MAX_WAIT_TIME_BEFORE_QUEUEING = 20;
 	protected static final boolean TRYLOCK_ON_READ			 = false;
 	protected static final String HOST 						 = "//localhost/";
 
-	protected Map<Integer,AtomicInteger> 	waitingWriters;
+	protected Map<Integer,AtomicInteger>	waitingWriters;
 	protected Map<Integer,Lock> 			objectLocks;
 
 	/**
@@ -40,15 +40,14 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 
 	/**
 	 * Default constructor
-	 * @throws JvnException
 	 * @throws RemoteException 
 	 * @throws MalformedURLException 
 	 **/
-	public JvnAbstractCoord() throws JvnException, RemoteException, MalformedURLException {
+	public JvnAbstractCoord() throws RemoteException, MalformedURLException {
 		super();
 		this.rmiRegistry		= LocateRegistry.getRegistry();
 		try {
-			this.jvnLoadBalancer	= (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
+			this.jvnLoadBalancer = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
@@ -57,14 +56,8 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 		this.jvnObjects 		= new JvnObjectMapCoord();
 	}
 
-	/**
-	 * Get the reference of a JVN object managed by a given JVN server 
-	 * @param jon : the JVN object name
-	 * @param js : the remote reference of the JVNServer
-	 * @throws java.rmi.RemoteException,JvnException
-	 **/
 	@Override
-	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException{
+	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws RemoteException{
 		return this.jvnObjects.get(jon);
 	}
 	
@@ -88,15 +81,23 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	/**
 	 * A JVN server terminates
 	 * @param js  : the remote reference of the server
-	 * @throws java.rmi.RemoteException, JvnException
+	 * @throws RemoteException 
 	 **/
 	@Override
-	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
-		this.jvnObjects.cleanUpServer(js);
+	public void jvnTerminate(JvnRemoteServer js) throws RemoteException {
+		this.jvnObjects.cleanUpServer(js, true);
+	}
+	
+	/**
+	 * retire les verrou d'un serveur Jvn inaccessible
+	 * @param js un serveur inaccessible
+	 */
+	protected void jvnRemoveOnFail(JvnRemoteServer js){
+		this.jvnObjects.cleanUpServer(js, false);
 	}
 
 	@Override
-	public void invalidateKey(int key, Serializable o, JvnRemoteServer js) {
+	public void invalidateKey(int key, Serializable o, JvnRemoteServer js) throws RemoteException {
 		this.jvnObjects.cleanUpKey(key,o,js);
 	}
 	

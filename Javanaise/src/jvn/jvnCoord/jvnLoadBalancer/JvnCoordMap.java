@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -144,7 +143,7 @@ public class JvnCoordMap extends Thread implements Serializable {
 	}
 	
 
-	synchronized private void reArrangeCoords() {
+	synchronized protected void reArrangeCoords() {
 		launchMissingSlave();
 		int max = getMaxInstancePerJVM();
 		for(JvnRemotePhysical oldPhysJVM : this.slavelists.keySet()) {

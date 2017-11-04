@@ -57,7 +57,7 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 		}
 		if(!alive) {
 			try {
-				new JvnMasterLoadBalancerImpl(this.CoordMap, this.currentOjectId); // local
+				new JvnMasterLoadBalancerImpl(this.coordMap, this.currentOjectId); // local
 			} catch (RemoteException | MalformedURLException | JvnException e) {
 				e.printStackTrace();
 			}
@@ -77,6 +77,6 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 
 	@Override
 	public void updateJvnCoordMap(JvnCoordMap jcm) throws RemoteException, JvnException {
-		this.CoordMap = jcm;
+		this.coordMap = jcm;
 	}
 }

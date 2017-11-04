@@ -9,7 +9,9 @@ package jvn.jvnObject;
 
 import java.io.*;
 
+import jvn.jvnExceptions.JvnConcurrentLockUpgradeException;
 import jvn.jvnExceptions.JvnException;
+import jvn.jvnExceptions.JvnPreemptiveInvalidationException;
 
 /**
  * Interface of a JVN object. 
@@ -27,17 +29,18 @@ public interface JvnObject extends Serializable {
 
 	/**
 	 * Get a Write lock on the object 
-	 * @return true normal, false si on a pas pu upgrade (et où le lock en lecture à été perdu entre temps)
 	 * @throws JvnException
+	 * @throws JvnConcurrentLockUpgradeException 
 	 **/
-	public boolean jvnLockWrite() throws jvn.jvnExceptions.JvnException; 
+	public void jvnLockWrite() throws JvnException, JvnConcurrentLockUpgradeException; 
 
 	/**
 	 * Unlock  the object 
 	 * @return true cas normal, false si verrou invalidé par le coordinateur
 	 * @throws jvn.jvnExceptions.JvnException
+	 * @throws JvnPreemptiveInvalidationException 
 	 */
-	public boolean jvnUnLock() throws jvn.jvnExceptions.JvnException; 
+	public void jvnUnLock() throws JvnException, JvnPreemptiveInvalidationException; 
 
 
 	/**

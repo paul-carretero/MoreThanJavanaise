@@ -20,14 +20,14 @@ public class JvnException extends Exception {
 	/**
 	 * message associé à l'Exception
 	 */
-	private final String message;
+	protected String message;
   
 	/**
 	 * Instancie cet Exception avec un message par défault
 	 */
 	public JvnException() {
 		super();
-		this.message = "JvnException";
+		this.message = "generic JvnException";
 	}
 	
 	/**

@@ -1,10 +1,10 @@
 package jvn.jvnObject;
 
 import java.io.Serializable;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
+import jvn.jvnExceptions.JvnConcurrentLockUpgradeException;
 import jvn.jvnExceptions.JvnException;
+import jvn.jvnExceptions.JvnPreemptiveInvalidationException;
 import jvn.jvnServer.JvnLocalServer;
 import jvn.jvnServer.JvnServerImpl;
 
@@ -66,16 +66,16 @@ public class JvnObjectImpl implements JvnObject {
 	/**
 	 * vrai si le coordinateur à invalidé le verrou sur cet objet
 	 */
-	private volatile boolean	HasBeenInvalidated;
+	private transient volatile boolean HasBeenInvalidated = false;
 	/**
 	 * etat du verrou sur cet objet sur le serveur local
 	 */
-	private volatile LockState	lock;
-
+	private transient volatile LockState lock = LockState.NOLOCK;
+	
 	/**
-	 * monitor pour l'attente d'un verrou en lecture
+	 * Compteur du nombre d'appel à un verrou (on ne déverouille que si personne d'autre n'a le verrou)
 	 */
-	private final Lock appLevelLock;
+	private transient volatile int lockAskedCount = 0;
 
 	/**
 	 * @param jvnObjectId
@@ -86,7 +86,6 @@ public class JvnObjectImpl implements JvnObject {
 		this.jvnObjectId 		= jvnObjectId;
 		this.lock				= LockState.WRITE;
 		this.HasBeenInvalidated	= false;
-		this.appLevelLock		= new ReentrantLock(true);
 	}
 
 	/**
@@ -135,7 +134,7 @@ public class JvnObjectImpl implements JvnObject {
 
 	@Override
 	synchronized public void jvnLockRead() throws JvnException {
-		this.appLevelLock.lock();
+		this.lockAskedCount++;
 		if(!jvnLockReadHandler()) {
 			try {
 				this.wait();
@@ -144,7 +143,6 @@ public class JvnObjectImpl implements JvnObject {
 				e.printStackTrace();
 			}
 		}
-		this.appLevelLock.unlock();
 	}
 
 	synchronized public boolean jvnLockWriteHandler() throws JvnException {
@@ -192,12 +190,13 @@ public class JvnObjectImpl implements JvnObject {
 	}
 
 	@Override
-	synchronized public boolean jvnLockWrite() throws JvnException {
-		this.appLevelLock.lock();
+	synchronized public void jvnLockWrite() throws JvnException, JvnConcurrentLockUpgradeException {
+		this.lockAskedCount++;
 		boolean askForUpgrade = this.lock == LockState.READ;
 		boolean res = true;
 		if(!jvnLockWriteHandler()) {
 			try {
+				this.lock = LockState.READCACHED;
 				this.wait();
 				res = (!askForUpgrade || this.lock == LockState.READCACHED);
 				this.lock = LockState.WRITE;
@@ -205,8 +204,9 @@ public class JvnObjectImpl implements JvnObject {
 				e.printStackTrace();
 			}
 		}
-		this.appLevelLock.unlock();
-		return res;
+		if(!res) {
+			throw new JvnConcurrentLockUpgradeException();
+		}
 	}
 
 	@Override
@@ -219,37 +219,37 @@ public class JvnObjectImpl implements JvnObject {
 	 *
 	 */
 	@Override
-	synchronized public boolean jvnUnLock() throws JvnException {
-		this.appLevelLock.lock();
+	synchronized public void jvnUnLock() throws JvnException, JvnPreemptiveInvalidationException {
+		this.lockAskedCount--;
 		if(this.HasBeenInvalidated) {
 			this.HasBeenInvalidated	= false;
 			this.lock 				= LockState.NOLOCK;
 			this.notifyAll();
-			return false;
+			throw new JvnPreemptiveInvalidationException();
 		}
-
-		switch (this.lock) {
-		case READ:
-			this.lock = LockState.READCACHED;
-			break;
-		case READCACHED:
-			this.lock = LockState.READCACHED;
-			break;
-		case WRITECACHED:
-			this.lock = LockState.WRITECACHED;
-			break;
-		case WRITE:
-			this.lock = LockState.WRITECACHED;
-			break;
-		case WRITECACHEDREAD:
-			this.lock = LockState.WRITECACHED;
-			break;
-		default:
-			this.lock = LockState.NOLOCK;
+		
+		if(this.lockAskedCount == 0) {
+			switch (this.lock) {
+			case READ:
+				this.lock = LockState.READCACHED;
+				break;
+			case READCACHED:
+				this.lock = LockState.READCACHED;
+				break;
+			case WRITECACHED:
+				this.lock = LockState.WRITECACHED;
+				break;
+			case WRITE:
+				this.lock = LockState.WRITECACHED;
+				break;
+			case WRITECACHEDREAD:
+				this.lock = LockState.WRITECACHED;
+				break;
+			default:
+				this.lock = LockState.NOLOCK;
+			}
+			this.notifyAll();
 		}
-		this.notifyAll();
-		this.appLevelLock.unlock();
-		return true;
 	}
 
 	@Override

@@ -1,24 +1,25 @@
 package jvn.jvnExceptions;
 
-public class JvnObjectNotFoundException extends JvnException {
+public class JvnTransactionException extends JvnException {
 
 	/**
 	 * serialVersionUID
 	 */
-	private static final long serialVersionUID = 5040142103568889147L;
+	private static final long serialVersionUID = 3520591689366148892L;
   
 	/**
 	 * Instancie cet Exception avec un message par défault
 	 */
-	public JvnObjectNotFoundException() {
-		super("JvnObjectNotFoundException");
+	public JvnTransactionException() {
+		super("JvnTransactionException");
 	}
 	
 	/**
 	 * Instancie cet Exception avec un message personalisé
 	 * @param message un message décrivant le problème
 	 */
-	public JvnObjectNotFoundException(String message) {
+	public JvnTransactionException(String message) {
 		super(message);
-	}	
+	}
+	
 }

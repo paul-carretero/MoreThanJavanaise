@@ -1,7 +1,6 @@
 package jvn.jvnCoord.jvnPhysicalLayer;
 
 import java.net.MalformedURLException;
-import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -154,18 +153,19 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	
 	/**
 	 * Détruit ce serveur physique (et les objets associés)
-	 * @throws NotBoundException 
-	 * @throws JvnException 
-	 * @throws RemoteException 
-	 * @throws AccessException 
 	 */
 	public void destroy() {
 		try {
-			//((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordDestroy(this);
 			this.myLoadBalancer.destroy();
 			this.slaveCoords.forEach((k,v) -> v.kill());
 			UnicastRemoteObject.unexportObject(this,true);
 		} catch (Exception e) {
+			System.out.println("please ignore : " + e.getMessage());
+		}
+		
+		try {
+			finalize();
+		} catch (Throwable e) {
 			System.out.println("please ignore : " + e.getMessage());
 		}
 	}

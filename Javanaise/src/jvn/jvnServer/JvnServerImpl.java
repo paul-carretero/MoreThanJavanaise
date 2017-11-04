@@ -10,9 +10,14 @@ package jvn.jvnServer;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jvn.jvnCoord.JvnLogicalCoord.JvnRemoteCoord;
 import jvn.jvnExceptions.JvnException;
+import jvn.jvnExceptions.JvnPreemptiveInvalidationException;
+import jvn.jvnExceptions.JvnTransactionException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnObject.JvnObjectImpl;
 import jvn.proxy.CallHandler;
@@ -44,6 +49,12 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * "Cache" des objets JVN stockés localements
 	 */
 	private final JvnObjectMapServ LocalsJvnObject;
+	
+	/**
+	 * Map de thread => Map d'objet (id->valeur) des transactions
+	 * Choix d'implémentation : deux thread locaux ne peuvent pas obtenir des verrou sur des objets identique
+	 */
+	private final Map<Thread,Map<Integer,JvnTransactData>> transactMasterMap;
 
 	/**
 	 * Default constructor
@@ -55,6 +66,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 		super();
 		this.LocalsJvnObject	= new JvnObjectMapServ();
 		this.jvnRemoteCoord 	= new CallHandler();
+		this.transactMasterMap	= new ConcurrentHashMap<>();
 	}
 
 	/**
@@ -192,7 +204,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public void jvnInvalidateReader(final int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException {
+	public void jvnInvalidateReader(final int joi) throws RemoteException, JvnException {
 		this.LocalsJvnObject.get(joi).jvnInvalidateReader();
 	}
 
@@ -242,6 +254,76 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	@Override
 	public void clearCache(boolean hard) throws JvnException {
 		throw new JvnException();
+	}
+	
+	@Override
+	public boolean isInTransaction() {
+		return this.transactMasterMap.containsKey(Thread.currentThread());
+	}
+
+	@Override
+	public void beginTransaction() throws JvnTransactionException {
+		this.transactMasterMap.put(Thread.currentThread(), new ConcurrentHashMap<>());
+	}
+
+	@Override
+	public void commitTransaction() throws JvnException, JvnPreemptiveInvalidationException, JvnTransactionException {
+		if(!isInTransaction()) {
+			throw new JvnTransactionException("pas dans une transaction, commit impossible");
+		}
+		
+		for (Entry<Integer, JvnTransactData> entry : this.transactMasterMap.get(Thread.currentThread()).entrySet())
+		{
+			for(int i = 0; i < entry.getValue().getTotalLockCount(); i++) {
+				this.LocalsJvnObject.get(entry.getKey()).jvnUnLock();
+			}
+		}
+		
+		this.transactMasterMap.remove(Thread.currentThread());
+	}
+
+	@Override
+	public void rollbackTransaction() throws JvnException, JvnPreemptiveInvalidationException, JvnTransactionException {
+		if(!isInTransaction()) {
+			throw new JvnTransactionException("pas dans une transaction, rollback impossible");
+		}
+		
+		for (Entry<Integer, JvnTransactData> entry : this.transactMasterMap.get(Thread.currentThread()).entrySet())
+		{
+		    this.LocalsJvnObject.updateJvnObject(entry.getKey(), entry.getValue().getSerializableObject());
+		    for(int i = 0; i < entry.getValue().getTotalLockCount(); i++) {
+				this.LocalsJvnObject.get(entry.getKey()).jvnUnLock();
+			}
+		}
+		
+		this.transactMasterMap.remove(Thread.currentThread());
+	}
+	
+	/**
+	 * vérifie que nous somme dans une transaction et ajoute si besoin un objet transactData dans la transactmastermap (pour tenir compte de l'objet)
+	 * @param jo un objet JVN
+	 * @throws JvnTransactionException
+	 */
+	private void checkTransactData(final JvnObject jo) throws JvnTransactionException{
+		if(!isInTransaction()) {
+			throw new JvnTransactionException("pas dans une transaction, register impossible");
+		}
+		
+		if(this.transactMasterMap.get(Thread.currentThread()).get(jo.jvnGetObjectId()) == null) {
+			this.transactMasterMap.get(Thread.currentThread()).put(jo.jvnGetObjectId(), new JvnTransactData());
+		}
+	}
+	
+	@Override
+	synchronized public void readRegisterInTransaction(final JvnObject jo) throws JvnTransactionException {
+		checkTransactData(jo);
+		this.transactMasterMap.get(Thread.currentThread()).get(jo.jvnGetObjectId()).read();
+	}
+	
+	@Override
+	synchronized public void writeRegisterInTransaction(final JvnObject jo) throws JvnTransactionException, JvnException {
+		checkTransactData(jo);		
+		this.transactMasterMap.get(Thread.currentThread()).get(jo.jvnGetObjectId()).write(jo.jvnGetObjectState());
 	}
 }
 

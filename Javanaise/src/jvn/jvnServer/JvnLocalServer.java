@@ -9,6 +9,8 @@ package jvn.jvnServer;
 import java.io.Serializable;
 
 import jvn.jvnExceptions.JvnException;
+import jvn.jvnExceptions.JvnPreemptiveInvalidationException;
+import jvn.jvnExceptions.JvnTransactionException;
 import jvn.jvnObject.JvnObject;
 
 /**
@@ -74,6 +76,18 @@ public interface JvnLocalServer {
 	 * @throws JvnException 
 	 */
 	public void clearCache(boolean hard) throws JvnException;
+	
+	public void beginTransaction() throws JvnTransactionException;
+	
+	public void commitTransaction() throws JvnPreemptiveInvalidationException, JvnException, JvnTransactionException;
+	
+	public void rollbackTransaction() throws JvnPreemptiveInvalidationException, JvnException, JvnTransactionException;
+
+	public boolean isInTransaction();
+
+	public void writeRegisterInTransaction(JvnObject jvnObject) throws JvnTransactionException, JvnException;
+
+	public void readRegisterInTransaction(JvnObject jo) throws JvnTransactionException;
 }
 
 

@@ -3,7 +3,6 @@ package jvn.jvnCoord.JvnLogicalCoord;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -93,16 +92,26 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 
 	public void slaveSynchronize(int joi, Runnable r) {
 		this.syncLock.readLock().lock();
-	    int h = joi % numberOfThread;
+	    int h = (joi+42) % numberOfThread; // 42 => noise (double usage de "%")
 	    this.syncExecutors[h].submit(r);
+	    this.syncLock.readLock().unlock();
 	}
 	
-	public Serializable jvnLockReadHandler(int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+	protected Serializable jvnLockReadHandler(int joi, JvnRemoteServer js) throws JvnException {
 		this.syncLock.readLock().lock();
 		this.objectLocks.get(joi).lock();
 		if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
-			this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriterForReader(joi));
-			this.jvnObjects.addReadingServer(joi, this.jvnObjects.getWritingServer(joi));
+			
+			try {
+				this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriterForReader(joi));
+			} catch (@SuppressWarnings("unused") RemoteException e) {
+				jvnRemoveOnFail(this.jvnObjects.getWritingServer(joi));
+				this.jvnObjects.setWritingServer(joi, null);
+			}
+			
+			if(this.jvnObjects.getWritingServer(joi) != null) {
+				this.jvnObjects.addReadingServer(joi, this.jvnObjects.getWritingServer(joi));
+			}
 			this.jvnObjects.setWritingServer(joi, null);
 		}
 		this.jvnObjects.addReadingServer(joi, js);
@@ -113,17 +122,26 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		return o;
 	}
 
-	public Serializable jvnLockWriteHandler(int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+	protected Serializable jvnLockWriteHandler(int joi, JvnRemoteServer js) throws JvnException {
 		this.syncLock.readLock().lock();
 		this.objectLocks.get(joi).lock();
 
 		if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
-			this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriter(joi));
+			try {
+				Serializable o = this.jvnObjects.getWritingServer(joi).jvnInvalidateWriter(joi);
+				this.jvnObjects.get(joi).setSerializableObject(o);
+			} catch (@SuppressWarnings("unused") RemoteException e) {
+				jvnRemoveOnFail(this.jvnObjects.getWritingServer(joi));
+			}
 		}
 		
 		for(JvnRemoteServer server : this.jvnObjects.getReadingServer(joi)) {
 			if(!server.equals(js)) {
-				server.jvnInvalidateReader(joi);
+				try {
+					server.jvnInvalidateReader(joi);
+				} catch (@SuppressWarnings("unused") RemoteException e) {
+					jvnRemoveOnFail(this.jvnObjects.getWritingServer(joi));
+				}
 			}
 		}
 		this.jvnObjects.resetReadingServer(joi);
@@ -137,6 +155,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		Serializable o = this.jvnObjects.get(joi).jvnGetObjectState();
 		slaveSynchronize(joi, new JvnLockWrite(this.slave, joi, js, o));
 		this.objectLocks.get(joi).unlock();
+		this.syncLock.readLock().unlock();
 		return o;
 	}
 	
@@ -198,21 +217,16 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		throw new JvnException("wrong call");
 	}
 	
-	/**
-	 * A JVN server terminates
-	 * @param js  : the remote reference of the server
-	 * @throws java.rmi.RemoteException, JvnException
-	 **/
 	@Override
-	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
+	public void jvnTerminate(JvnRemoteServer js) throws RemoteException {
 		this.syncLock.readLock().lock();
 		super.jvnTerminate(js);
-		slaveSynchronize(1, new JvnTerminate(this.slave, js));
+		slaveSynchronize(42, new JvnTerminate(this.slave, js));
 		this.syncLock.readLock().unlock();
 	}
 
 	@Override
-	public void invalidateKey(int joi, Serializable o, JvnRemoteServer js) {
+	public void invalidateKey(int joi, Serializable o, JvnRemoteServer js) throws RemoteException {
 		this.syncLock.readLock().lock();
 		super.invalidateKey(joi, o, js);
 		slaveSynchronize(joi, new JvnInvalidateKey(this.slave, joi, o, js));
@@ -231,11 +245,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 			Naming.unbind(HOST+"JvnCoord_"+ this.id);
 		 	unexportObject(this,true);
 		 	this.finalize();
-		} catch (@SuppressWarnings("unused") NotBoundException | RemoteException | MalformedURLException e) {
-			//e.printStackTrace(); // osef
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
+		} catch (@SuppressWarnings("unused") Throwable e) {}
 		finally {
 			this.syncLock.writeLock().unlock();
 		}

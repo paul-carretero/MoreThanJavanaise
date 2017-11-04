@@ -54,7 +54,7 @@ public interface JvnRemoteCoord extends Remote {
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
+	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws RemoteException, JvnException;
 
 	/**
 	 * Get a Write lock on a JVN object managed by a given JVN server 
@@ -63,14 +63,14 @@ public interface JvnRemoteCoord extends Remote {
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
+	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws RemoteException, JvnException;
 
 	/**
 	 * A JVN server terminates
 	 * @param js  : the remote reference of the server
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
+	public void jvnTerminate(JvnRemoteServer js) throws RemoteException, JvnException;
 
 	/**
 	 * methode permettant d'informer le coordinateur que le serveur distant à éliminé un objet de son cache

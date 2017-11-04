@@ -8,6 +8,9 @@
 package jvn.jvnServer;
 
 import java.rmi.*;
+
+import jvn.jvnExceptions.JvnException;
+
 import java.io.*;
 
 
@@ -23,7 +26,7 @@ public interface JvnRemoteServer extends Remote {
 	 * @throws java.rmi.RemoteException
 	 * @throws jvn.jvnExceptions.JvnException 
 	 **/
-	public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException;
+	public void jvnInvalidateReader(int joi) throws RemoteException, JvnException;
 
 	/**
 	 * Invalidate the Write lock of a JVN object 
@@ -32,7 +35,7 @@ public interface JvnRemoteServer extends Remote {
 	 * @throws java.rmi.RemoteException
 	 * @throws jvn.jvnExceptions.JvnException 
 	 **/
-	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException;
+	public Serializable jvnInvalidateWriter(int joi) throws RemoteException, JvnException;
 
 	/**
 	 * Reduce the Write lock of a JVN object 
@@ -41,7 +44,7 @@ public interface JvnRemoteServer extends Remote {
 	 * @throws java.rmi.RemoteException
 	 * @throws jvn.jvnExceptions.JvnException 
 	 **/
-	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException;
+	public Serializable jvnInvalidateWriterForReader(int joi) throws RemoteException, JvnException;
 
 	/**
 	 * notify ce serveur local que le verrou en lecture est disponible et met à jour la valeur de l'objet considéré
@@ -50,7 +53,7 @@ public interface JvnRemoteServer extends Remote {
 	 * @param o le nouvel objet applicatif contenu dans l'objet javanaise associé à cet id (pour mise à jour du cache local)
 	 * @throws RemoteException
 	 */
-	public void notifyForReadWriteLock(int joi, Serializable o) throws java.rmi.RemoteException;
+	public void notifyForReadWriteLock(int joi, Serializable o) throws RemoteException;
 }
 
 

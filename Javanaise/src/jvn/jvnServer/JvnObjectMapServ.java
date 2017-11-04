@@ -1,5 +1,6 @@
 package jvn.jvnServer;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jvn.JvnObjectMap;
@@ -47,5 +48,9 @@ public class JvnObjectMapServ extends JvnObjectMap {
 	 */
 	public void removeFromAssocMap(final int joi) {
 		this.assocMap.remove(joi);
+	}
+	
+	public void updateJvnObject(final int joi, final Serializable o) {
+		this.LocalsJvnObject.get(this.assocMap.get(joi)).setSerializableObject(o);
 	}
 }

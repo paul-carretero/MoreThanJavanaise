@@ -41,7 +41,7 @@ public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implem
 	/**
 	 * Coordinateur en attente, ils seront initié si l'un des coordinateur utilisé est inaccéssible
 	 */
-	protected JvnCoordMap CoordMap;
+	protected JvnCoordMap coordMap;
 
 	/**
 	 * compteur d'id des objet. Le compteur est synchronizé avec le slave 
@@ -52,14 +52,14 @@ public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implem
 	public JvnAbstractLoadBalancer() throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.rmiRegistry 	= LocateRegistry.getRegistry();
-		this.CoordMap		= new JvnCoordMap(NUMBER_OF_COORDS_INSTANCE);
+		this.coordMap		= new JvnCoordMap(NUMBER_OF_COORDS_INSTANCE);
 		this.currentOjectId = 0;
 	}
 	
 	public JvnAbstractLoadBalancer(JvnCoordMap CoordMap, int currentOjectId) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.rmiRegistry 	= LocateRegistry.getRegistry();
-		this.CoordMap		= CoordMap;
+		this.coordMap		= CoordMap;
 		this.currentOjectId = currentOjectId;
 	}
 

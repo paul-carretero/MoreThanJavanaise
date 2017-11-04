@@ -7,10 +7,10 @@ import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnCoordNotifyWorker implements Runnable {
 
-	private final JvnMasterCoordImpl coord;
-	private final int joi;
-	private final JvnRemoteServer js;
-	private final boolean askForRead;
+	private final JvnMasterCoordImpl	coord;
+	private final int 					joi;
+	private final JvnRemoteServer 		js;
+	private final boolean 				askForRead;
 
 	/**
 	 * @param coord

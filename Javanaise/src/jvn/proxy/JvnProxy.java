@@ -68,9 +68,15 @@ public class JvnProxy implements InvocationHandler {
 			switch (l.lock()) {
 			case READ:
 				this.jvnObject.jvnLockRead();
+				if(jvnLocalServer.isInTransaction()) {
+					jvnLocalServer.readRegisterInTransaction(this.jvnObject);
+				}
 				break;
 			case WRITE:
 				this.jvnObject.jvnLockWrite();
+				if(jvnLocalServer.isInTransaction()) {
+					jvnLocalServer.writeRegisterInTransaction(this.jvnObject);
+				}
 				break;
 			default:
 				throw new JvnProxyException("Erreur d'annotation du type de verrou utilisé dans la methode");
@@ -80,7 +86,9 @@ public class JvnProxy implements InvocationHandler {
 			return invokedMethod.invoke(this.jvnObject.jvnGetObjectState(), args);
 		} finally {
 			if(invokedMethod.isAnnotationPresent(LockAsked.class)){ 
-				this.jvnObject.jvnUnLock();
+				if(!jvnLocalServer.isInTransaction()) {
+					this.jvnObject.jvnUnLock();
+				}
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package jvn.jvnCoord.JvnLogicalCoord;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,8 @@ import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnObjectMapCoord extends JvnObjectMap{
 
-	private final Map<Integer,List<JvnRemoteServer>> readingServer;
-	private final Map<Integer,JvnRemoteServer> writingServer;
+	private final Map<Integer,List<JvnRemoteServer>> 	readingServer;
+	private final Map<Integer,JvnRemoteServer> 			writingServer;
 
 	public JvnObjectMapCoord() {
 		super();
@@ -50,7 +51,7 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 	public List<JvnRemoteServer> getReadingServer(int joi){
 		return this.readingServer.get(joi);
 	}
-	
+
 	public void resetReadingServer(int joi) {
 		this.readingServer.put(joi, new CopyOnWriteArrayList<JvnRemoteServer>());
 	}
@@ -76,16 +77,26 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		}
 	}
 
-	public void cleanUpServer(JvnRemoteServer js) {
+	public void cleanUpServer(JvnRemoteServer js, boolean tryUpdate) {
 		for(Iterator<Map.Entry<Integer,JvnRemoteServer>> it = this.writingServer.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<Integer,JvnRemoteServer> entry = it.next();
 			if(entry.getValue().equals(js)) {
+				if(tryUpdate) {
+					try {
+						Serializable o = js.jvnInvalidateWriter(entry.getKey());
+						if(o != null) {
+							this.LocalsJvnObject.get(this.assocMap.get(entry.getKey())).setSerializableObject(o);
+						}
+					} catch (RemoteException | JvnException e) {
+						System.out.println("erreur dans la finalisation d'un serveur" + e.getMessage());
+					}
+				}
 				it.remove();
 			}
 		}
-		
+
 		for (List<JvnRemoteServer> server : this.readingServer.values()) {
-		    server.remove(js);
+			server.remove(js);
 		}
 	}
 
@@ -94,7 +105,7 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		if(readingServerOnKey != null) {
 			readingServerOnKey.remove(js);
 		}
-	
+
 		if(this.writingServer.get(joi) == js) {
 			this.get(joi).setSerializableObject(o);
 			this.writingServer.remove(joi);

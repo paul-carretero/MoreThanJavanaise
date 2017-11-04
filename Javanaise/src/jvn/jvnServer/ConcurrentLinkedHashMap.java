@@ -41,7 +41,7 @@ public class ConcurrentLinkedHashMap extends LinkedHashMap<String,JvnObject> {
 	 */
 	public ConcurrentLinkedHashMap() {
 		super(16,0.75f,true); // ordered by access!!!
-		this.mapLock 			= new ReentrantReadWriteLock(true);
+		this.mapLock = new ReentrantReadWriteLock(true);
 	}
 
 	@Override
