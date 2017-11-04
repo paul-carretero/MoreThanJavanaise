@@ -37,7 +37,6 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 	 **/
 	@Override
 	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException{
-		jo.defaultLock();
 		this.jvnObjects.put(jo, jon, js);
 		this.objectLocks.put(jo.jvnGetObjectId(), new ReentrantLock(true));
 		this.waitingWriters.put(jo.jvnGetObjectId(), new AtomicInteger(0));

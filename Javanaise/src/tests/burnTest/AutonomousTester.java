@@ -1,13 +1,13 @@
-package tests;
+package tests.burnTest;
 
 import jvn.jvnExceptions.JvnException;
-import jvn.jvnObject.JvnObject;
-import jvn.jvnServer.JvnLocalServer;
-import jvn.jvnServer.JvnServerImpl;
-
+import jvn.proxy.JvnProxy;
+import tests.testObjects.CollaborativeBarrier;
+import tests.testObjects.CollaborativeBarrierItf;
+import tests.testObjects.CollaborativeObject;
+import tests.testObjects.CollaborativeObjectItf;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class AutonomousTester {
@@ -32,29 +32,23 @@ public class AutonomousTester {
 		iteration = Integer.parseInt(args[2]);	
 		
 		System.out.println("[WORKER "+ id + "]: STARTED @ "+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
-		
-		JvnLocalServer js = JvnServerImpl.jvnGetServer();
-				
-		JvnObject startBarrier = js.jvnLookupObject("startBarrier");
-		JvnObject endBarrier = js.jvnLookupObject("endBarrier");
 						
-		startBarrier.jvnLockWrite();
-		((AtomicInteger) startBarrier.jvnGetObjectState()).decrementAndGet();
-		startBarrier.jvnUnLock();
+		CollaborativeBarrierItf startBarrier = (CollaborativeBarrierItf) JvnProxy.getRemoteInstance(CollaborativeBarrier.class, "startBarrier");
+		CollaborativeBarrierItf endBarrier = (CollaborativeBarrierItf) JvnProxy.getRemoteInstance(CollaborativeBarrier.class, "endBarrier");
+		
+		startBarrier.addMe();
 						
 		boolean keepDreaming = true;
 		int i = 0;
 		while(keepDreaming && i < Integer.MAX_VALUE) {
 			i++;
-			startBarrier.jvnLockRead();
-			//System.out.println(startBarrier);
-			if(((AtomicInteger) startBarrier.jvnGetObjectState()).get() <= 0) {
+			if(startBarrier.go()) {
 				keepDreaming = false;				
 			}
-			startBarrier.jvnUnLock();
 		}
+		
 		if(i == Integer.MAX_VALUE ) {
-			System.out.println(42/0);
+			System.out.println(42/0); // purest mathematical crash
 		}
 		
 		System.out.println("[WORKER "+ id + "]: SYNCHRONIZED @ " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
@@ -62,22 +56,22 @@ public class AutonomousTester {
 		
 		int res = doBoringWork();	
 		
-		endBarrier.jvnLockWrite();
-		((AtomicInteger) endBarrier.jvnGetObjectState()).decrementAndGet();
-		endBarrier.jvnUnLock();
+		endBarrier.addMe();
 		System.out.println("[WORKER "+ id + "]: ENDED WITH " + res + " ADDITIONS TO THE LIST");
 		
 	}
 
 	private static int doBoringWork() throws JvnException, InterruptedException {
-		JvnLocalServer js = JvnServerImpl.jvnGetServer();
-		JvnObject collaborativeObject = js.jvnLookupObject("collaborativeObject");
-		int res = 0;
-		boolean wait = true;
+		CollaborativeObjectItf collaborativeObject = (CollaborativeObjectItf) JvnProxy.getRemoteInstance(CollaborativeObject.class, "collaborativeObject");
+		int res 		= 0;
+		int n 			= Math.max(1, iteration/50);
+		int toremove 	= 50;
+		boolean wait 	= true;
+		
 		System.out.print("[WORKER "+ id + "]: ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░");
-		int n = Math.max(1, iteration/50);
-		int toremove = 50;
+		
 		for (int i = 0; i < iteration; i++) {
+			
 			if(i % n == 0) {
 				for(int j = toremove; j>0; j--) {
 					System.out.print("\b");
@@ -88,20 +82,20 @@ public class AutonomousTester {
 					System.out.print("░");
 				}
 			}
+			
 			wait = true;
-			collaborativeObject.jvnLockRead();
-			int last = ((CollaborativeObject) collaborativeObject.jvnGetObjectState()).getLast();
+			
+			int last = collaborativeObject.getLast();
 			if(last == previous || (last == 0 && id == 1)) {
-				collaborativeObject.jvnLockWrite();
-				((CollaborativeObject) collaborativeObject.jvnGetObjectState()).addMe(id);
+				collaborativeObject.addMe(id);
 				res++;
 				wait = false;
 			}
-			collaborativeObject.jvnUnLock();
 			if(wait) {
 				Thread.sleep(1);
 			}
 		}
+		
 		System.out.println();
 		return res;
 	}

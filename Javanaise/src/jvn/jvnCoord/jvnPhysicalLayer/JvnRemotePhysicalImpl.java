@@ -158,6 +158,7 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 		try {
 			this.myLoadBalancer.destroy();
 			this.slaveCoords.forEach((k,v) -> v.kill());
+			this.masterCoords.forEach((k,v) -> v.kill());
 			UnicastRemoteObject.unexportObject(this,true);
 		} catch (Exception e) {
 			System.out.println("please ignore : " + e.getMessage());

@@ -1,33 +1,29 @@
-package tests;
+package tests.burnTest;
 
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import jvn.jvnExceptions.JvnException;
-import jvn.jvnObject.JvnObject;
-import jvn.jvnServer.JvnServerImpl;
+import jvn.proxy.JvnProxy;
+import tests.testObjects.CollaborativeBarrier;
+import tests.testObjects.CollaborativeBarrierItf;
+import tests.testObjects.CollaborativeObject;
+import tests.testObjects.CollaborativeObjectItf;
 
 public class AutonomousTesterManager {
 
 	public AutonomousTesterManager(String[] args) throws NumberFormatException, JvnException, InterruptedException {
-		JvnServerImpl js = JvnServerImpl.jvnGetServer();
 		int nproc = Integer.parseInt(args[0]);
 
-		JvnObject startBarrier = js.jvnCreateObject(new AtomicInteger(nproc));
-		JvnObject endBarrier = js.jvnCreateObject(new AtomicInteger(nproc));
-		JvnObject collaborativeObject = js.jvnCreateObject(new CollaborativeObject());
+		CollaborativeBarrierItf startBarrier  		= (CollaborativeBarrierItf) JvnProxy.newInstance(new CollaborativeBarrier(nproc), "startBarrier");
+		CollaborativeBarrierItf endBarrier 			= (CollaborativeBarrierItf) JvnProxy.newInstance(new CollaborativeBarrier(nproc), "endBarrier");
+		CollaborativeObjectItf collaborativeObject 	= (CollaborativeObjectItf) JvnProxy.newInstance(new CollaborativeObject(), "collaborativeObject");
 
-		js.jvnRegisterObject("startBarrier", startBarrier);
-		js.jvnRegisterObject("endBarrier", endBarrier);
-		js.jvnRegisterObject("collaborativeObject", collaborativeObject);
-
-		startBarrier.jvnUnLock();
-		endBarrier.jvnUnLock();
-		collaborativeObject.jvnUnLock();
-
+		startBarrier.reset(nproc);
+		startBarrier.reset(nproc);
+		collaborativeObject.reset();
+		
 		boolean keepDreaming = true;
 
 		System.out.println("[MANAGER]: INITIALIZED");
@@ -49,19 +45,16 @@ public class AutonomousTesterManager {
 			else if(k % 4 == 3) {
 				System.out.print("▏   ");
 			}
-			endBarrier.jvnLockRead();
-			if(( (AtomicInteger) endBarrier.jvnGetObjectState()).get() <= 0 ) {
+			if(endBarrier.go()) {
 				keepDreaming = false;
 			}
-			endBarrier.jvnUnLock();
 			k++;
 		}
 
 		System.out.println();
 		
-		collaborativeObject.jvnLockRead();
 		boolean success = true;
-		Queue<Integer> q = ((CollaborativeObject) collaborativeObject.jvnGetObjectState()).getResult();
+		Queue<Integer> q = collaborativeObject.getResult();
 
 		int previous = 0;
 		for(Integer i : q) {
@@ -76,13 +69,12 @@ public class AutonomousTesterManager {
 			System.out.println("(⌐■_■)");
 			System.out.println("Successfully created a list of " + q.size() + " Integer cyclique : ");
 			for(int i = 0; i < q.size(); i++) {
-				System.out.print(q.poll());
+				System.out.print(q.poll()+"-");
 			}
 		}
 		else {
 			System.out.println("fail...");
 		}
-		collaborativeObject.jvnUnLock();
 	}
 
 	public static void main(String[] args) throws NumberFormatException, JvnException, InterruptedException, RemoteException, MalformedURLException {

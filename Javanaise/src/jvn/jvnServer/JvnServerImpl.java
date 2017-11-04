@@ -87,7 +87,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 
 	/**
 	 * The JVN service is not used anymore
-	 * TODO upload writelocked object
 	 * @throws JvnException
 	 **/
 	@Override
@@ -215,7 +214,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriter(final int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException { 
+	public Serializable jvnInvalidateWriter(final int joi) throws RemoteException, JvnException { 
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
@@ -228,7 +227,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriterForReader(final int joi) throws java.rmi.RemoteException,jvn.jvnExceptions.JvnException { 
+	public Serializable jvnInvalidateWriterForReader(final int joi) throws RemoteException, JvnException { 
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriterForReader();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
@@ -239,7 +238,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 */
 	public void invalideKey(final int joi) {
 		try {
-			this.jvnRemoteCoord.invalidateKey(joi,this.LocalsJvnObject.get(joi),this);
+			this.jvnRemoteCoord.invalidateKey(joi,this.LocalsJvnObject.get(joi).jvnGetObjectState(),this);
 			this.LocalsJvnObject.removeFromAssocMap(joi);
 		} catch (RemoteException | JvnException e) {
 			e.printStackTrace();
@@ -249,11 +248,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	@Override
 	public void notifyForReadWriteLock(final int joi, final Serializable o) throws RemoteException {
 		this.LocalsJvnObject.get(joi).notifyWaiters(o);
-	}
-
-	@Override
-	public void clearCache(boolean hard) throws JvnException {
-		throw new JvnException();
 	}
 	
 	@Override
@@ -288,9 +282,14 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 			throw new JvnTransactionException("pas dans une transaction, rollback impossible");
 		}
 		
+		System.out.println(this.transactMasterMap.get(Thread.currentThread()).size());
+		
 		for (Entry<Integer, JvnTransactData> entry : this.transactMasterMap.get(Thread.currentThread()).entrySet())
 		{
-		    this.LocalsJvnObject.updateJvnObject(entry.getKey(), entry.getValue().getSerializableObject());
+			if(entry.getValue().haveBackup()) {
+				this.LocalsJvnObject.updateJvnObject(entry.getKey(), entry.getValue().getSerializableObject());
+			}
+		    
 		    for(int i = 0; i < entry.getValue().getTotalLockCount(); i++) {
 				this.LocalsJvnObject.get(entry.getKey()).jvnUnLock();
 			}

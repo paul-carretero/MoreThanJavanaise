@@ -38,14 +38,14 @@ read nbWorker
 echo " -> Nombre d'itération ?"
 read nbIteration
 
-echo " -> Lancement du Coordinateur"
-`gnome-terminal -x sh -c "java -jar main.jar coord ; bash"`
+#echo " -> Lancement du Coordinateur"
+#`gnome-terminal -x sh -c "java -jar main.jar coord ; bash"`
 
 echo " -> Lancement du Manager"
-`gnome-terminal -x sh -c "java -jar main.jar manager $nbWorker; bash"`
+`gnome-terminal -x sh -c "java -jar burnTest.jar manager $nbWorker; bash"`
 
 echo " -> Lancement des Tester"
 for i in `seq 1 $nbWorker`;
 do
-	`gnome-terminal -x sh -c "java -jar main.jar tester $i $nbWorker $nbIteration; bash"`
+	`gnome-terminal -x sh -c "java -jar burnTest.jar tester $i $nbWorker $nbIteration; bash"`
 done

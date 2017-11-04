@@ -97,16 +97,14 @@ public interface JvnObject extends Serializable {
 	public boolean isFreeOfLock();
 	
 	/**
-	 * réinitialise le lock de l'objet de nolock
-	 * Par défaut lors de la création celui si est en write
-	 * @see JvnObject
-	 */
-	public void defaultLock();
-
-	/**
 	 * Réveil les eventuelle thread en attente de verrou en lecture sur cet objet et met à jour la valeur de l'objet encapsulé
 	 * @param o un objet serializable encapsuler dans ce JvnObject
 	 */
 	public void notifyWaiters(Serializable o);
+
+	/**
+	 * @return le type de verrou sur l'objet atuellement détenu localement
+	 */
+	public LockState jvngetLock();
 
 }

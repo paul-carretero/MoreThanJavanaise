@@ -7,24 +7,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.AfterClass;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import jvn.jvnExceptions.JvnException;
-import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnServerImpl;
+import jvn.proxy.JvnProxy;
+import tests.testObjects.StringObject;
+import tests.testObjects.StringObjectItf;
 
 public class JvnLocalServerTest implements Serializable{
 
-	private static final long serialVersionUID = -6778422767501106604L;
+	private static final long serialVersionUID 	= -6778422767501106604L;
 	private static final int 	ITERATION 		= 200;
-	private final JvnServerImpl js 				= JvnServerImpl.jvnGetServer();
-	private final List<Integer> actualObject	= new ArrayList<Integer>();
+	private final static List<Integer> actualObject	= new ArrayList<Integer>();
 
-	@Before
-	public void setUp() throws Exception {
-		this.js.clearCache(true);
-		assertNull("Vérification que les serveurs sont vide", this.js.jvnLookupObject("0"));
+	@BeforeClass
+	public static void setUp() throws Exception {
 		populate();
 	}
 	
@@ -33,26 +32,26 @@ public class JvnLocalServerTest implements Serializable{
 		JvnServerImpl.jvnGetServer().jvnTerminate();
 	}
 
-	private void populate() throws JvnException {
+	private static void populate() throws JvnException {
 		for (Integer i = 0; i < ITERATION; i++) {
-			this.actualObject.add(i);
-			JvnObject o = this.js.jvnCreateObject(i.toString());
-			this.js.jvnRegisterObject(i.toString(), o);
-			o.jvnUnLock();
+			JvnProxy.newInstance(new StringObject(i.toString()), i.toString());
+			actualObject.add(i);
 		}
 	}
 
 	@Test(timeout = 1000)
 	public void localBurnNotNull() throws JvnException {
 		for (Integer i = 0; i < ITERATION; i++) {
-			assertNotNull("Vérification que les objets ont bien été créé", this.js.jvnLookupObject(i.toString()));
+			String res = ((StringObjectItf) JvnProxy.getRemoteInstance(StringObject.class, i.toString())).getS();
+			assertNotNull("Vérification que les objets ont bien été créé", res);
 		}
 	}
 
 	@Test(timeout = 1000)
 	public void localBurnEqual() throws JvnException {
 		for (Integer i = 0; i < ITERATION; i++) {
-			assertEquals("Vérification que les objets créé sont OK", i.toString(), this.js.jvnLookupObject(i.toString()).jvnGetObjectState().toString());
+			String res = ((StringObjectItf) JvnProxy.getRemoteInstance(StringObject.class, i.toString())).getS();
+			assertEquals("Vérification que les objets créé sont OK", i.toString(), res);
 		}
 	}
 
@@ -65,13 +64,13 @@ public class JvnLocalServerTest implements Serializable{
 
 		// "0" n'est plus en cache
 		start = System.nanoTime();
-		this.js.jvnLookupObject("0");
+		JvnProxy.getRemoteInstance(StringObject.class, "0");
 		end = System.nanoTime();
 		tps1 = end-start;
 
 		// "ITERATION" est en cache
 		start = System.nanoTime();
-		this.js.jvnLookupObject(String.valueOf(ITERATION));
+		JvnProxy.getRemoteInstance(StringObject.class, String.valueOf(ITERATION-1));
 		end = System.nanoTime();
 		tps2 = end-start;
 
@@ -79,13 +78,13 @@ public class JvnLocalServerTest implements Serializable{
 
 		// "1" n'est plus en cache
 		start = System.nanoTime();
-		this.js.jvnLookupObject("1");
+		JvnProxy.getRemoteInstance(StringObject.class, "1");
 		end = System.nanoTime();
 		tps1 = end-start;
 
 		// "ITERATION - 1" est en cache
 		start = System.nanoTime();
-		this.js.jvnLookupObject(String.valueOf(ITERATION-1));
+		JvnProxy.getRemoteInstance(StringObject.class, String.valueOf(ITERATION-2));
 		end = System.nanoTime();
 		tps2 = end-start;
 
@@ -93,13 +92,13 @@ public class JvnLocalServerTest implements Serializable{
 
 		// "2" n'est plus en cache
 		start = System.nanoTime();
-		this.js.jvnLookupObject("2");
+		JvnProxy.getRemoteInstance(StringObject.class, "2");
 		end = System.nanoTime();
 		tps1 = end-start;
 
 		// "ITERATION - 2" est en cache
 		start = System.nanoTime();
-		this.js.jvnLookupObject(String.valueOf(ITERATION-2));
+		JvnProxy.getRemoteInstance(StringObject.class, String.valueOf(ITERATION-3));
 		end = System.nanoTime();
 		tps2 = end-start;
 

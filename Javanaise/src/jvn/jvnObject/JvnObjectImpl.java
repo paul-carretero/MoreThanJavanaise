@@ -1,5 +1,7 @@
 package jvn.jvnObject;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import jvn.jvnExceptions.JvnConcurrentLockUpgradeException;
@@ -13,42 +15,12 @@ import jvn.jvnServer.JvnServerImpl;
  * Implémentation d'un objet Javanaise
  */
 public class JvnObjectImpl implements JvnObject {
-
-	/**
-	 * represente l'etat d'un verrou sur un objet Javanaise
-	 * Il s'agit du type de verrou sur cet objet que possède le serveur et non l'application (synchro applicatif nécessaire)
-	 */
-	public enum LockState{
-		/**
-		 * pas de verrou
-		 */
-		NOLOCK,
-		/**
-		 * pas de verrou en cours mais le serveur possède un verrou en lecture
-		 */
-		READCACHED,
-		/**
-		 * pas de verrou en cours mais le serveur possède un verrou en ecriture
-		 */
-		WRITECACHED,
-		/**
-		 * verrou en lecture
-		 */
-		READ,
-		/**
-		 * verrou en ecriture
-		 */
-		WRITE,
-		/**
-		 * verrou en lecture mais le serveur possède un verrou en ecriture
-		 */
-		WRITECACHEDREAD;
-	}
-
+	
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID 			= -4993207529464463527L;
+	
 	/**
 	 * Instance du serveur javanaise local
 	 */
@@ -58,6 +30,7 @@ public class JvnObjectImpl implements JvnObject {
 	 * identifiant unique sur l'ensemble du systeme de cet objet
 	 */
 	private final int 		jvnObjectId;
+	
 	/**
 	 * objet applicatif encapsulé dans cet objet javanaise
 	 */
@@ -66,27 +39,37 @@ public class JvnObjectImpl implements JvnObject {
 	/**
 	 * vrai si le coordinateur à invalidé le verrou sur cet objet
 	 */
-	private transient volatile boolean HasBeenInvalidated = false;
+	private transient volatile boolean HasBeenInvalidated;
+	
 	/**
 	 * etat du verrou sur cet objet sur le serveur local
 	 */
-	private transient volatile LockState lock = LockState.NOLOCK;
+	private transient volatile LockState lock;
 	
 	/**
 	 * Compteur du nombre d'appel à un verrou (on ne déverouille que si personne d'autre n'a le verrou)
 	 */
-	private transient volatile int lockAskedCount = 0;
+	private transient volatile int lockAskedCount;
 
-	/**
-	 * @param jvnObjectId
-	 * @param serializableObject
-	 */
 	public JvnObjectImpl(int jvnObjectId, Serializable serializableObject) {
 		this.serializableObject	= serializableObject;
 		this.jvnObjectId 		= jvnObjectId;
 		this.lock				= LockState.WRITE;
 		this.HasBeenInvalidated	= false;
+		this.lockAskedCount 	= 0;
 	}
+	
+	/**
+	 * @param in
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.lock 				= LockState.NOLOCK;
+        this.HasBeenInvalidated = false;
+        this.lockAskedCount 	= 0;
+    }
 
 	/**
 	 * utilisé pour les test
@@ -228,7 +211,8 @@ public class JvnObjectImpl implements JvnObject {
 			throw new JvnPreemptiveInvalidationException();
 		}
 		
-		if(this.lockAskedCount == 0) {
+		if(this.lockAskedCount <= 0) {
+			this.lockAskedCount = 0;
 			switch (this.lock) {
 			case READ:
 				this.lock = LockState.READCACHED;
@@ -250,11 +234,6 @@ public class JvnObjectImpl implements JvnObject {
 			}
 			this.notifyAll();
 		}
-	}
-
-	@Override
-	public void defaultLock() {
-		this.lock = LockState.NOLOCK;
 	}
 
 	@Override

@@ -1,11 +1,6 @@
-package tests;
+package tests.testObjects;
 
-import java.io.Serializable;
-
-import jvn.proxy.LockAsked;
-import jvn.proxy.LockAsked.Lock;
-
-public class TestObject implements Serializable, TestObjectItf{
+public class StringObject implements StringObjectItf{
 
 	/**
 	 * serialVersionUID
@@ -14,18 +9,17 @@ public class TestObject implements Serializable, TestObjectItf{
 
 	private String s;
 	
-	public TestObject(String s) {
+	public StringObject(String s) {
 		this.setS(s);
 	}
 	
-	public TestObject() {
+	public StringObject() {
 		this.setS("nullString");
 	}
 
 	/**
 	 * @return the s
 	 */
-	@LockAsked(lock = Lock.READ)
 	public String getS() {
 		return this.s;
 	}
@@ -33,7 +27,6 @@ public class TestObject implements Serializable, TestObjectItf{
 	/**
 	 * @param s the s to set
 	 */
-	@LockAsked(lock = Lock.WRITE)
 	public void setS(String s) {
 		this.s = s;
 	}

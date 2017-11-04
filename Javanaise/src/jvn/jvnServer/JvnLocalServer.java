@@ -70,13 +70,6 @@ public interface JvnLocalServer {
 	 **/
 	public void jvnTerminate() throws jvn.jvnExceptions.JvnException; 
 	
-	/**
-	 * principalement utile pour les tests pour réinitialiser les serveur
-	 * @param hard vrai si l'on doit également réinitialiser le coordinateur
-	 * @throws JvnException 
-	 */
-	public void clearCache(boolean hard) throws JvnException;
-	
 	public void beginTransaction() throws JvnTransactionException;
 	
 	public void commitTransaction() throws JvnPreemptiveInvalidationException, JvnException, JvnTransactionException;
