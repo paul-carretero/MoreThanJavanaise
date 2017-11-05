@@ -137,7 +137,7 @@ public class CallHandler implements JvnRemoteCoord{
 	}
 
 	@Override
-	public Serializable jvnLockWrite(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+	public void jvnLockWriteSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
 		throw new JvnException("need refectoring on this interface...");
 	}
 
@@ -151,5 +151,8 @@ public class CallHandler implements JvnRemoteCoord{
 	public void kill() throws RemoteException, JvnException {
 		throw new JvnException("need refectoring on this interface...");
 	}
+
+	@Override
+	public void ping() throws RemoteException {}
 
 }

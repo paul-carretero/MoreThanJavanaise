@@ -36,7 +36,7 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	 */
 	protected JvnObjectMapCoord jvnObjects;
 	protected JvnLoadBalancer	jvnLoadBalancer;
-	private final Registry		rmiRegistry;
+	protected final Registry		rmiRegistry;
 
 	/**
 	 * Default constructor
@@ -67,6 +67,10 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	 */
 	public void waitOnWW(int joi) {
 		AtomicInteger ww = this.waitingWriters.get(joi);
+		if(ww == null) {
+			this.waitingWriters.put(joi, new AtomicInteger(0));
+			ww = this.waitingWriters.get(joi);
+		}
 		if(ww.get() > 0) {
 			synchronized (ww) {
 				try {

@@ -81,11 +81,13 @@ public interface JvnRemoteCoord extends Remote {
 	 */
 	public void invalidateKey(int joi, Serializable o, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
 
-	public Serializable jvnLockWrite(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException;
+	public void jvnLockWriteSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException;
 	
 	public void upgrade() throws RemoteException, JvnException;
 
 	public void kill() throws RemoteException, JvnException;
+	
+	public void ping() throws RemoteException;
 
 }
 

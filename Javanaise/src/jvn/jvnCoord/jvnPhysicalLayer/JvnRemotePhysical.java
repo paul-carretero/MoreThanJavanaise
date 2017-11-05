@@ -31,5 +31,7 @@ public interface JvnRemotePhysical extends Remote {
 	 */
 	public void ping() throws RemoteException;
 
+	public boolean isLoadBalancer() throws RemoteException;
+
 	
 }

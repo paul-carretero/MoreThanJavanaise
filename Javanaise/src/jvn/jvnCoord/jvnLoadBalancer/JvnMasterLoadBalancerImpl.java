@@ -28,7 +28,7 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
 		System.out.println("[LOADBALANCER] [MASTER] [1]");
 		JvnRemotePhysicalImpl.jvnGetLocalPhysical();
-		JvnRemotePhysicalImpl.jvnGetLocalPhysical();
+		//?JvnRemotePhysicalImpl.jvnGetLocalPhysical();
 		this.coordMap.addPhysicalLayer(JvnRemotePhysicalImpl.jvnGetLocalPhysical());
 		this.coordMap.initialize();
 		this.coordMap.start();
@@ -46,8 +46,10 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 		super(CoordMap,currentOjectId);
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
 		System.out.println("[LOADBALANCER] [MASTER] [2]");
-		this.coordMap.start();
+		this.coordMap.heartbeat();
+		this.coordMap.newSlaveLoadBalancer();
 		this.coordMap.reArrangeCoords();
+		this.coordMap.start();
 	}
 	
 	@Override

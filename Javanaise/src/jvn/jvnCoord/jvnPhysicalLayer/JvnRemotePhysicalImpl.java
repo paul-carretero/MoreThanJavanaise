@@ -34,7 +34,7 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	
 	private final Map<Integer,JvnMasterCoordImpl> 	masterCoords;
 
-	protected JvnRemotePhysicalImpl() throws RemoteException {
+	private JvnRemotePhysicalImpl() throws RemoteException {
 		super();
 		System.out.println("[PHYSICAL] ["+this.hashCode()+"]");
 		this.slaveCoords			= new HashMap<>();
@@ -179,5 +179,10 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	 */
 	public int jvnGetObjectId() throws RemoteException, JvnException {
 		return this.myLoadBalancer.jvnGetObjectId();
+	}
+
+	@Override
+	public boolean isLoadBalancer() throws RemoteException {
+		return this.myLoadBalancer != null;
 	}	
 }

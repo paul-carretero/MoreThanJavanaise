@@ -66,7 +66,6 @@ public class AutonomousTester {
 		int res 		= 0;
 		int n 			= Math.max(1, iteration/50);
 		int toremove 	= 50;
-		boolean wait 	= true;
 		
 		System.out.print("[WORKER "+ id + "]: ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░");
 		
@@ -82,18 +81,14 @@ public class AutonomousTester {
 					System.out.print("░");
 				}
 			}
-			
-			wait = true;
-			
+						
 			int last = collaborativeObject.getLast();
+			System.out.println("[WORKER "+ id + " -> " + last);
 			if(last == previous || (last == 0 && id == 1)) {
 				collaborativeObject.addMe(id);
 				res++;
-				wait = false;
 			}
-			if(wait) {
-				Thread.sleep(1);
-			}
+			Thread.sleep(1);
 		}
 		
 		System.out.println();

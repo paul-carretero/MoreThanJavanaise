@@ -55,11 +55,10 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 
 	// ordonné et séquentiel par objet par le master dans l'ordre de traitement
 	@Override
-	public Serializable jvnLockWrite(Serializable o, int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
+	public void jvnLockWriteSync(Serializable o, int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
 		this.jvnObjects.get(joi).setSerializableObject(o);
 		this.jvnObjects.resetReadingServer(joi);
 		this.jvnObjects.setWritingServer(joi, js);
-		return null;
 	}
 
 	@Override
@@ -90,4 +89,7 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 		}
 		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"] [DOWN]");
 	}
+
+	@Override
+	public void ping() throws RemoteException {}
 }

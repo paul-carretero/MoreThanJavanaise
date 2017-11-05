@@ -37,8 +37,6 @@ public class JvnCoordMap extends Thread implements Serializable {
 
 	private transient Registry rmiRegistry;
 
-	private transient JvnRemotePhysical myPhysJVM;
-
 	/**
 	 * Instancie la classe pour gérer les liste des coordinateur master et slave
 	 * @param numberOfCluster nombre de cluster
@@ -55,9 +53,13 @@ public class JvnCoordMap extends Thread implements Serializable {
 		this.numberOfCluster	= numberOfCluster;
 		getSlaveLoadBalancer();
 	}
-
-	synchronized public void setMyPhysJVM(JvnRemotePhysical myPhysJVM) {
-		this.myPhysJVM = myPhysJVM;
+	
+	synchronized protected void newSlaveLoadBalancer() throws RemoteException {
+		try {
+			getLessUsedJVMWithoutLB().jvnNewSlaveLoadBalancer();
+		}catch (@SuppressWarnings("unused") NullPointerException e) {
+			// there is no jvm available, do nothing
+		}
 	}
 
 	synchronized protected JvnLoadBalancer getSlaveLoadBalancer() {
@@ -75,9 +77,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 			this.slave.ping();
 		} catch (@SuppressWarnings("unused") Exception e) {
 			this.slave			= null;
-			if(this.masterlists.size() > 1 && this.myPhysJVM != null) {
+			if(this.masterlists.size() > 1) {
 				try {
-					getLessUsedJVMWithoutLB().jvnNewSlaveLoadBalancer();
+					newSlaveLoadBalancer();
 					Thread.sleep(TIMEOUT);
 					this.slave = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancerSlave");
 				} catch (Exception e1) {
@@ -276,7 +278,7 @@ public class JvnCoordMap extends Thread implements Serializable {
 		updateSlave();
 	}
 
-	synchronized private void heartbeat() {
+	synchronized protected void heartbeat() {
 		List<JvnRemotePhysical> tempDead = new LinkedList<>();
 		for(JvnRemotePhysical frp : this.masterlists.keySet()) {	
 			try {
@@ -300,8 +302,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 					int coordId = coordIds.next();
 					if(remainingJVM.getValue().contains(coordId)) {
 						try {
-							remainingJVM.getKey().upgradeCoord(coordId); // si la remainingJVM a aussi plante
+							remainingJVM.getKey().upgradeCoord(coordId);
 							this.masterlists.get(remainingJVM.getKey()).add(coordId);
+							this.slavelists.get(remainingJVM.getKey()).remove(coordId);
 							coordIds.remove();
 						} catch (RemoteException e1) {
 							e1.printStackTrace();
@@ -359,9 +362,13 @@ public class JvnCoordMap extends Thread implements Serializable {
 		int currentInstance = 0;
 		for(JvnRemotePhysical key : this.masterlists.keySet()) {
 			currentInstance = this.masterlists.get(key).size() + this.slavelists.get(key).size();
-			if(this.myPhysJVM != key && currentInstance < instanceOnRes) {
-				res = key;
-				instanceOnRes = currentInstance;
+			try {
+				if(currentInstance < instanceOnRes && !key.isLoadBalancer()) {
+					res = key;
+					instanceOnRes = currentInstance;
+				}
+			} catch (RemoteException e) {
+				e.printStackTrace();
 			}
 		}
 		return res;

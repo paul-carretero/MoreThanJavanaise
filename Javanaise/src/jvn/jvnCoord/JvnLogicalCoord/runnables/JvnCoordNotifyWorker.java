@@ -1,7 +1,8 @@
-package jvn.jvnCoord.JvnLogicalCoord;
+package jvn.jvnCoord.JvnLogicalCoord.runnables;
 
 import java.rmi.RemoteException;
 
+import jvn.jvnCoord.JvnLogicalCoord.JvnMasterCoordImpl;
 import jvn.jvnExceptions.JvnException;
 import jvn.jvnServer.JvnRemoteServer;
 

@@ -21,7 +21,7 @@ public class AutonomousTesterManager {
 		CollaborativeObjectItf collaborativeObject 	= (CollaborativeObjectItf) JvnProxy.newInstance(new CollaborativeObject(), "collaborativeObject");
 
 		startBarrier.reset(nproc);
-		startBarrier.reset(nproc);
+		endBarrier.reset(nproc);
 		collaborativeObject.reset();
 		
 		boolean keepDreaming = true;
@@ -68,9 +68,7 @@ public class AutonomousTesterManager {
 			Thread.sleep(500);
 			System.out.println("(⌐■_■)");
 			System.out.println("Successfully created a list of " + q.size() + " Integer cyclique : ");
-			for(int i = 0; i < q.size(); i++) {
-				System.out.print(q.poll()+"-");
-			}
+			System.out.println(q);
 		}
 		else {
 			System.out.println("fail...");
