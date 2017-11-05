@@ -54,7 +54,7 @@ public class JvnObjectImpl implements JvnObject {
 	public JvnObjectImpl(int jvnObjectId, Serializable serializableObject) {
 		this.serializableObject	= serializableObject;
 		this.jvnObjectId 		= jvnObjectId;
-		this.lock				= LockState.WRITE;
+		this.lock				= LockState.WRITECACHED;
 		this.HasBeenInvalidated	= false;
 		this.lockAskedCount 	= 0;
 	}

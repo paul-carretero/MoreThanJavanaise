@@ -37,13 +37,14 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 	
 	private static final int		numberOfThread	= Runtime.getRuntime().availableProcessors();
 	private final ExecutorService[] syncExecutors 	= new ExecutorService[numberOfThread];
-	private static final int		TIMEOUT	= 3000;
+	private static final int		TIMEOUT			= 3000;
 	
 	private JvnRemoteCoord 			slave;
 	private final ReadWriteLock		syncLock;
 
 	public JvnMasterCoordImpl(int id) throws RemoteException, MalformedURLException, JvnException {
 		super();
+		this.jvnObjects		= new JvnObjectMapCoord();
 		this.waitThreadPool	= Executors.newCachedThreadPool();
 		this.id 			= id;
 		this.syncLock 		= new ReentrantReadWriteLock();
@@ -117,7 +118,6 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		this.syncLock.readLock().lock();
 		this.objectLocks.get(joi).lock();
 		if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
-			
 			try {
 				this.jvnObjects.get(joi).setSerializableObject(this.jvnObjects.getWritingServer(joi).jvnInvalidateWriterForReader(joi));
 			} catch (@SuppressWarnings("unused") RemoteException e) {
@@ -132,7 +132,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		}
 		this.jvnObjects.addReadingServer(joi, js);
 		Serializable o = this.jvnObjects.get(joi).jvnGetObjectState();
-		slaveSynchronize(joi, new JvnLockRead(this, this.slave, joi, js));
+		slaveSynchronize(joi, new JvnLockRead(this, this.slave, joi, js, o));
 		this.objectLocks.get(joi).unlock();
 		this.syncLock.readLock().unlock();
 		return o;
@@ -183,7 +183,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	@Override
-	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
+	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws RemoteException, JvnException{
 		this.syncLock.readLock().lock();
 		if(TRYLOCK_ON_READ) {
 			if(this.waitingWriters.get(joi).get() == 0 && this.objectLocks.get(joi).tryLock()) {
@@ -233,7 +233,6 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 
 	@Override
 	public void jvnLockWriteSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
-		System.out.println("xdlol");
 		throw new JvnException("wrong call");
 	}
 	
@@ -274,4 +273,14 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 
 	@Override
 	public void ping() throws RemoteException {}
+
+	@Override
+	public JvnSlaveInitData getData() throws RemoteException, JvnException {
+		return new JvnSlaveInitData(this.waitingWriters, this.objectLocks, this.jvnObjects);
+	}
+
+	@Override
+	public void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+		throw new JvnException("wrong call");
+	}
 }

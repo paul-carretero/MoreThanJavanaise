@@ -27,11 +27,14 @@ public class JvnLockWrite extends JvnSlaveSync{
 			try {
 				this.slave.jvnLockWriteSync(this.o,this.joi,this.js);
 			} catch (RemoteException | JvnException e) {
+				this.slave = null;
 				checkSlave();
-				try {
-					this.slave.jvnLockWriteSync(this.o,this.joi,this.js);
-				} catch (RemoteException | JvnException e1) {
-					System.out.println(e1.getMessage());
+				if(this.slave != null) {
+					try {
+						this.slave.jvnLockWriteSync(this.o,this.joi,this.js);
+					} catch (RemoteException | JvnException e1) {
+						System.out.println(e1.getMessage());
+					}
 				}
 			}
 		}

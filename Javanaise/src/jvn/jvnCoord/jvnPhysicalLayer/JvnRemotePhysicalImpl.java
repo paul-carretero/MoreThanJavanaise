@@ -42,31 +42,43 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 		this.rmiRegistry			= LocateRegistry.getRegistry();
 		this.myLoadBalancer 		= null;
 		jps 						= this;
+		boolean alreadyMaster		= false;
+		boolean alreadySlave		= false;
+		
+
+		try {
+			((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).ping();
+			alreadyMaster 			= true;
+		} catch (@SuppressWarnings("unused") Exception e) {}
 		
 		try {
-			((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordRegister(this);
-			
-			// ça aura déjà fail si il n'y a pas de masterLB, on tente donc d'ajouter un slaveLB si besoin
-			
-			try {
-				((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancerSlave")).ping();
-			} catch (RemoteException | NotBoundException e) {
-				try {
-					this.myLoadBalancer = new JvnSlaveLoadBalancerImpl();
-				} catch (MalformedURLException | JvnException | NotBoundException e1) {
-					e.printStackTrace();
-					System.err.println("--------------------------");
-					e1.printStackTrace();
-				}
-			}
-			
-		} catch (JvnException | RemoteException | NotBoundException e) {
+			((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancerSlave")).ping();
+			alreadySlave 			= true;
+		} catch (@SuppressWarnings("unused") Exception e) {}
+		
+		
+		if(!alreadyMaster) {
 			try {
 				this.myLoadBalancer = new JvnMasterLoadBalancerImpl();
-			} catch (MalformedURLException | JvnException e1) {
+			} catch (MalformedURLException | JvnException e) {
 				e.printStackTrace();
-				System.err.println("--------------------------");
-				e1.printStackTrace();
+			}
+		}
+		else if(!alreadySlave) {
+			try {
+				JvnLoadBalancer master = ((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer"));
+				master.ping();
+				master.jvnPhysicalCoordRegister(this);	
+				this.myLoadBalancer = new JvnSlaveLoadBalancerImpl();
+			} catch (MalformedURLException | JvnException | NotBoundException e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			try {
+				((JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer")).jvnPhysicalCoordRegister(this);
+			} catch (JvnException | NotBoundException e) {
+				e.printStackTrace();
 			}
 		}
 	}

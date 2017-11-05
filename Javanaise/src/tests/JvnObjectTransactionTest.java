@@ -3,7 +3,6 @@ package tests;
 import static org.junit.Assert.*;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -77,7 +76,7 @@ public class JvnObjectTransactionTest {
 					JvnObjectTest3.setS(o3Str);
 					lockAppLevel3.unlock();
 				}
-			} catch (InterruptedException | BrokenBarrierException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

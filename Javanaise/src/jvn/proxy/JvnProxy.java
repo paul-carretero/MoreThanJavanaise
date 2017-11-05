@@ -41,7 +41,6 @@ public class JvnProxy implements InvocationHandler {
 				jvnLocalServer.jvnRegisterObject(jon, tempJvnObj);
 			}
 			this.jvnObject = tempJvnObj;
-			this.jvnObject.jvnUnLock(); // on avait aqui le lock en write à la création
 		}catch (Exception e) {
 			e.printStackTrace();
 			throw new JvnProxyException("Erreur durant le l'initialisation du proxy");

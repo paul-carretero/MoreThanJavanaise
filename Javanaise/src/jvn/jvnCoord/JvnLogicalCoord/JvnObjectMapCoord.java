@@ -15,6 +15,10 @@ import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnObjectMapCoord extends JvnObjectMap{
 
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = -1440979092572164334L;
 	private final Map<Integer,List<JvnRemoteServer>> 	readingServer;
 	private final Map<Integer,JvnRemoteServer> 			writingServer;
 

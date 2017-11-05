@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import jvn.jvnCoord.JvnLogicalCoord.JvnRemoteCoord;
+import jvn.jvnCoord.JvnLogicalCoord.JvnSlaveInitData;
 import jvn.jvnCoord.jvnLoadBalancer.JvnLoadBalancer;
 import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
@@ -24,7 +25,7 @@ public class CallHandler implements JvnRemoteCoord{
 	private JvnRemoteCoord[]	jvnCoords;
 	private final int 			numberOfCoords;
 	private static final String HOST 	= "localhost";
-	private static final int	TIMEOUT	= 3000;
+	private static final int	WAIT_DELAY	= 3000;
 
 	public CallHandler() throws RemoteException, NotBoundException, JvnException {
 		this.rmiRegistry		= LocateRegistry.getRegistry(HOST);
@@ -38,7 +39,7 @@ public class CallHandler implements JvnRemoteCoord{
 	
 	synchronized private void refreshCoord(int id) {
 		try {
-			Thread.sleep(TIMEOUT);
+			Thread.sleep(WAIT_DELAY);
 			this.jvnCoords[id] = (JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord_"+id);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -51,7 +52,7 @@ public class CallHandler implements JvnRemoteCoord{
 			return this.jvnloadBalancer.jvnGetObjectId();
 		} catch (Exception e) {
 			try {
-				Thread.sleep(TIMEOUT);
+				Thread.sleep(WAIT_DELAY);
 				this.jvnloadBalancer = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
 				return this.jvnloadBalancer.jvnGetObjectId();
 			} catch (InterruptedException | NotBoundException e1) {
@@ -97,8 +98,13 @@ public class CallHandler implements JvnRemoteCoord{
 		try {
 			return this.jvnCoords[idCoord].jvnLockRead(joi, js);
 		} catch (@SuppressWarnings("unused") Exception e) {
-			refreshCoord(idCoord);
-			return this.jvnCoords[idCoord].jvnLockRead(joi, js);
+			try {
+				refreshCoord(idCoord);
+				return this.jvnCoords[idCoord].jvnLockRead(joi, js);
+			} catch (@SuppressWarnings("unused") Exception e1) {
+				refreshCoord(idCoord);
+				return this.jvnCoords[idCoord].jvnLockRead(joi, js);
+			}
 		}
 	}
 
@@ -108,8 +114,13 @@ public class CallHandler implements JvnRemoteCoord{
 		try {
 			return this.jvnCoords[idCoord].jvnLockWrite(joi, js);
 		} catch (@SuppressWarnings("unused") Exception e) {
-			refreshCoord(idCoord);
-			return this.jvnCoords[idCoord].jvnLockWrite(joi, js);
+			try {
+				refreshCoord(idCoord);
+				return this.jvnCoords[idCoord].jvnLockWrite(joi, js);
+			} catch (@SuppressWarnings("unused") Exception e1) {
+				refreshCoord(idCoord);
+				return this.jvnCoords[idCoord].jvnLockWrite(joi, js);
+			}
 		}
 	}
 
@@ -154,5 +165,15 @@ public class CallHandler implements JvnRemoteCoord{
 
 	@Override
 	public void ping() throws RemoteException {}
+
+	@Override
+	public JvnSlaveInitData getData() throws RemoteException, JvnException {
+		throw new JvnException("need refectoring on this interface...");
+	}
+
+	@Override
+	public void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
+		throw new JvnException("need refectoring on this interface...");
+	}
 
 }

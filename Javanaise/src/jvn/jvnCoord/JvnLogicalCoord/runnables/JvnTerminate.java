@@ -8,7 +8,7 @@ import jvn.jvnExceptions.JvnException;
 import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnTerminate extends JvnSlaveSync{
-	
+
 
 	public JvnTerminate(final JvnMasterCoordImpl master, final JvnRemoteCoord slave, final JvnRemoteServer js) {
 		super(master,slave,js);
@@ -21,11 +21,14 @@ public class JvnTerminate extends JvnSlaveSync{
 			try {
 				this.slave.jvnTerminate(this.js);
 			} catch (RemoteException | JvnException e) {
+				this.slave = null;
 				checkSlave();
-				try {
-					this.slave.jvnTerminate(this.js);
-				} catch (RemoteException | JvnException e1) {
-					System.out.println(e1.getMessage());
+				if(this.slave != null) {
+					try {
+						this.slave.jvnTerminate(this.js);
+					} catch (RemoteException | JvnException e1) {
+						System.out.println(e1.getMessage());
+					}
 				}
 			}
 		}

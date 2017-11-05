@@ -1,6 +1,8 @@
 package jvn.jvnCoord.jvnPhysicalLayer;
 
-import java.rmi.RemoteException;
+import java.io.IOException;
+
+import jvn.Shared;
 
 /**
  * @author Paul Carretero
@@ -10,10 +12,11 @@ public class Main {
 
 	/**
 	 * @param args
-	 * @throws RemoteException
+	 * @throws IOException 
 	 * 
 	 */
-	public static void main(String[] args) throws RemoteException {
+	public static void main(String[] args) throws IOException {
+		Shared.setRMITimeout();
 		JvnRemotePhysicalImpl.jvnGetLocalPhysical();
 	}
 

@@ -1,4 +1,4 @@
-package irc;
+package tests.irc;
 
 import java.io.Serializable;
 

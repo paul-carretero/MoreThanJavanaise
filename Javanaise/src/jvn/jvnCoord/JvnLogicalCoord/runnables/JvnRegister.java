@@ -9,7 +9,7 @@ import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
 public class JvnRegister extends JvnSlaveSync{
-	
+
 	private final String 	jon;
 	private final JvnObject jo;
 
@@ -27,11 +27,14 @@ public class JvnRegister extends JvnSlaveSync{
 			try {
 				this.slave.jvnRegisterObject(this.jon, this.jo, this.js);
 			} catch (RemoteException | JvnException e) {
+				this.slave = null;
 				checkSlave();
-				try {
-					this.slave.jvnRegisterObject(this.jon, this.jo, this.js);
-				} catch (RemoteException | JvnException e1) {
-					System.out.println(e1.getMessage());
+				if(this.slave != null) {
+					try {
+						this.slave.jvnRegisterObject(this.jon, this.jo, this.js);
+					} catch (RemoteException | JvnException e1) {
+						System.out.println(e1.getMessage());
+					}
 				}
 			}
 		}

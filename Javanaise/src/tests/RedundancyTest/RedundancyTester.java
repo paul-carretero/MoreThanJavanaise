@@ -1,22 +1,26 @@
-package tests.burnTest;
+package tests.RedundancyTest;
 
+import jvn.Shared;
 import jvn.jvnExceptions.JvnException;
 import jvn.proxy.JvnProxy;
 import tests.testObjects.CollaborativeBarrier;
 import tests.testObjects.CollaborativeBarrierItf;
 import tests.testObjects.CollaborativeObject;
 import tests.testObjects.CollaborativeObjectItf;
+
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
-public class AutonomousTester {
+public class RedundancyTester {
 	
 	private static int iteration = 100;
 	private static int id;
 	private static int previous;
 
-	public AutonomousTester(String[] args) throws JvnException, InterruptedException {
+	public RedundancyTester(String[] args) throws JvnException, InterruptedException, IOException {
+		Shared.setRMITimeout();
 		if(args.length != 3) {
 			System.out.println("Usage:");
 			System.out.println("exec <PID> <MAX_PID> <NB ITERATION>");
@@ -64,30 +68,18 @@ public class AutonomousTester {
 	private static int doBoringWork() throws JvnException, InterruptedException {
 		CollaborativeObjectItf collaborativeObject = (CollaborativeObjectItf) JvnProxy.getRemoteInstance(CollaborativeObject.class, "collaborativeObject");
 		int res 		= 0;
-		int n 			= Math.max(1, iteration/50);
-		int toremove 	= 50;
-		
-		System.out.print("[WORKER "+ id + "]: ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░");
 		
 		for (int i = 0; i < iteration; i++) {
-			
-			if(i % n == 0) {
-				for(int j = toremove; j>0; j--) {
-					System.out.print("\b");
-				}
-				toremove--;
-				System.out.print("█");
-				for(int j = toremove; j>0; j--) {
-					System.out.print("░");
-				}
-			}
-						
 			int last = collaborativeObject.getLast();
 			if(last == previous || (last == 0 && id == 1)) {
 				collaborativeObject.addMe(id);
 				res++;
+				System.out.println("[WORKER "+ id + "]: READ+WRITE @ " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
 			}
-			Thread.sleep(1);
+			else {
+				System.out.println("[WORKER "+ id + "]: READ ["+last+"]   @ " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
+			}
+			Thread.sleep(20);
 		}
 		
 		System.out.println();

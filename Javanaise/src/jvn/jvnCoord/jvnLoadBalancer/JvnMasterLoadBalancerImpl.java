@@ -3,6 +3,8 @@ package jvn.jvnCoord.jvnLoadBalancer;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysicalImpl;
@@ -15,6 +17,7 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 	 */
 	private static final long serialVersionUID = -71074878096960858L;
 	private JvnLoadBalancer slave;
+	private final ExecutorService asyncOps;
 
 	/**
 	 * créer depuis une jvm
@@ -27,13 +30,12 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 		super();
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
 		System.out.println("[LOADBALANCER] [MASTER] [1]");
-		JvnRemotePhysicalImpl.jvnGetLocalPhysical();
-		//?JvnRemotePhysicalImpl.jvnGetLocalPhysical();
+		this.asyncOps = Executors.newSingleThreadExecutor();
 		this.coordMap.addPhysicalLayer(JvnRemotePhysicalImpl.jvnGetLocalPhysical());
 		this.coordMap.initialize();
 		this.coordMap.start();
 	}
-	
+
 	/**
 	 * créer par un slave
 	 * @param CoordMap
@@ -46,12 +48,13 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 		super(CoordMap,currentOjectId);
 		Naming.rebind(HOST_URL+"JvnLoadBalancer", this);
 		System.out.println("[LOADBALANCER] [MASTER] [2]");
+		this.asyncOps = Executors.newSingleThreadExecutor();
 		this.coordMap.heartbeat();
 		this.coordMap.newSlaveLoadBalancer();
 		this.coordMap.reArrangeCoords();
 		this.coordMap.start();
 	}
-	
+
 	@Override
 	synchronized public int jvnGetObjectId() throws RemoteException, JvnException {
 		if(this.slave == null) {
@@ -67,9 +70,24 @@ public class JvnMasterLoadBalancerImpl extends JvnAbstractLoadBalancer {
 		return this.currentOjectId++;
 	}
 	
+	private class Task implements Runnable{
+		private final JvnCoordMap coordMap;
+		private final JvnRemotePhysical coord;
+
+		protected Task(JvnCoordMap coordMap, JvnRemotePhysical coord) {
+			this.coordMap 	= coordMap;
+			this.coord 		= coord;
+		}
+		
+		@Override
+		public void run() {
+			this.coordMap.addPhysicalLayer(this.coord);
+		}
+	}
+
 	@Override
 	synchronized public void jvnPhysicalCoordRegister(JvnRemotePhysical coord) throws RemoteException, JvnException {
-		this.coordMap.addPhysicalLayer(coord);
+		this.asyncOps.submit(new Task(this.coordMap, coord));
 	}
 
 	@Override

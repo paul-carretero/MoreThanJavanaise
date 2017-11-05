@@ -1,5 +1,6 @@
 package jvn;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,9 +10,13 @@ import jvn.jvnObject.JvnObject;
  * @author Paul Carretero
  * Base pour la gestion d'une collection d'objet javanaise
  */
-public abstract class JvnObjectMap {
+public abstract class JvnObjectMap implements Serializable {
 
 
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = -7598625750182926514L;
 	/**
 	 * Map des objet Javanaise
 	 */

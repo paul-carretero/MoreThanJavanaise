@@ -5,7 +5,7 @@
  * Authors: 
  */
 
-package irc;
+package tests.irc;
 
 import java.awt.*;
 import java.awt.event.*;

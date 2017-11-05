@@ -36,7 +36,7 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	 */
 	protected JvnObjectMapCoord jvnObjects;
 	protected JvnLoadBalancer	jvnLoadBalancer;
-	protected final Registry		rmiRegistry;
+	protected final Registry	rmiRegistry;
 
 	/**
 	 * Default constructor
@@ -53,7 +53,6 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 		}
 		this.waitingWriters 	= new ConcurrentHashMap<Integer,AtomicInteger>();
 		this.objectLocks 		= new ConcurrentHashMap<Integer,Lock>();
-		this.jvnObjects 		= new JvnObjectMapCoord();
 	}
 
 	@Override

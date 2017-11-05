@@ -89,6 +89,10 @@ public interface JvnRemoteCoord extends Remote {
 	
 	public void ping() throws RemoteException;
 
+	public JvnSlaveInitData getData() throws RemoteException, JvnException;
+
+	void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException;
+
 }
 
 

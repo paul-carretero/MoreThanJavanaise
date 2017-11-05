@@ -27,11 +27,14 @@ public class JvnInvalidateKey extends JvnSlaveSync{
 			try {
 				this.slave.invalidateKey(this.joi, this.o, this.js);
 			} catch (RemoteException | JvnException e) {
+				this.slave = null;
 				checkSlave();
-				try {
-					this.slave.invalidateKey(this.joi, this.o, this.js);
-				} catch (RemoteException | JvnException e1) {
-					System.err.println(e1.getLocalizedMessage());
+				if(this.slave != null) {
+					try {
+						this.slave.invalidateKey(this.joi, this.o, this.js);
+					} catch (RemoteException | JvnException e1) {
+						System.err.println(e1.getLocalizedMessage());
+					}
 				}
 			}
 		}

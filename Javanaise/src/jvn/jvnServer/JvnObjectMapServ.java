@@ -16,6 +16,11 @@ import jvn.jvnObject.JvnObject;
 public class JvnObjectMapServ extends JvnObjectMap {
 
 	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = 911159608018495906L;
+
+	/**
 	 * intialise le cache serveur
 	 * Utilisation d'une ConcurrentLinkedHashMap pour la gestion du cache des objet (LRU eviction)
 	 */
