@@ -17,7 +17,7 @@ import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
-public abstract class JvnAbstractCoord extends UnicastRemoteObject implements JvnRemoteCoord{
+public abstract class JvnAbstractCoord extends UnicastRemoteObject implements JvnRemoteCoordExtended{
 	
 
 	/**
@@ -100,8 +100,8 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	}
 
 	@Override
-	public void invalidateKey(int key, Serializable o, JvnRemoteServer js) throws RemoteException {
-		this.jvnObjects.cleanUpKey(key,o,js);
+	public void invalidateKey(int joi, Serializable o, JvnRemoteServer js) throws RemoteException {
+		this.jvnObjects.cleanUpKey(joi,o,js);
 	}
 	
 	@Override

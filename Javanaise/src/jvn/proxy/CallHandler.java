@@ -6,8 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-import jvn.jvnCoord.JvnLogicalCoord.JvnRemoteCoord;
-import jvn.jvnCoord.JvnLogicalCoord.JvnSlaveInitData;
+import jvn.jvnCoord.JvnRemoteCoord;
 import jvn.jvnCoord.jvnLoadBalancer.JvnLoadBalancer;
 import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
@@ -129,7 +128,8 @@ public class CallHandler implements JvnRemoteCoord{
 		for(int idCoord = 0; idCoord < this.numberOfCoords; idCoord++) {
 			try {
 				this.jvnCoords[idCoord].jvnTerminate(js);
-			} catch (@SuppressWarnings("unused") Exception e) {
+			} catch (@SuppressWarnings("unused") RemoteException e) {
+				System.out.println(idCoord);
 				refreshCoord(idCoord);
 				this.jvnCoords[idCoord].jvnTerminate(js);
 			}
@@ -146,34 +146,4 @@ public class CallHandler implements JvnRemoteCoord{
 			this.jvnCoords[idCoord].invalidateKey(joi, o, js);
 		}
 	}
-
-	@Override
-	public void jvnLockWriteSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
-		throw new JvnException("need refectoring on this interface...");
-	}
-
-	@Override
-	public void upgrade() throws RemoteException, JvnException {
-		throw new JvnException("need refectoring on this interface...");
-
-	}
-
-	@Override
-	public void kill() throws RemoteException, JvnException {
-		throw new JvnException("need refectoring on this interface...");
-	}
-
-	@Override
-	public void ping() throws RemoteException {}
-
-	@Override
-	public JvnSlaveInitData getData() throws RemoteException, JvnException {
-		throw new JvnException("need refectoring on this interface...");
-	}
-
-	@Override
-	public void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException {
-		throw new JvnException("need refectoring on this interface...");
-	}
-
 }

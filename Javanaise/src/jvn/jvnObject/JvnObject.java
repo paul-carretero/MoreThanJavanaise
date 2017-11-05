@@ -54,7 +54,7 @@ public interface JvnObject extends Serializable {
 	 * @return l'objet applicatif encapsuler dans cet objet javanaise
 	 * @throws JvnException
 	 **/
-	public Serializable jvnGetObjectState()	throws jvn.jvnExceptions.JvnException; 
+	public Serializable jvnGetObjectState(); 
 
 
 	/**

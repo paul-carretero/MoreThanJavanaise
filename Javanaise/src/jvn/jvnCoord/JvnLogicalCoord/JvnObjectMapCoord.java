@@ -110,7 +110,7 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 			readingServerOnKey.remove(js);
 		}
 
-		if(this.writingServer.get(joi) == js) {
+		if(js.equals(this.writingServer.get(joi))) {
 			this.get(joi).setSerializableObject(o);
 			this.writingServer.remove(joi);
 		}

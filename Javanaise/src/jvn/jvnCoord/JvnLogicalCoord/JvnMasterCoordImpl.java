@@ -39,7 +39,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 	private final ExecutorService[] syncExecutors 	= new ExecutorService[numberOfThread];
 	private static final int		TIMEOUT			= 3000;
 	
-	private JvnRemoteCoord 			slave;
+	private JvnRemoteCoordExtended 	slave;
 	private final ReadWriteLock		syncLock;
 
 	public JvnMasterCoordImpl(int id) throws RemoteException, MalformedURLException, JvnException {
@@ -93,13 +93,13 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		this.syncLock.readLock().unlock();
 	}
 	
-	synchronized public JvnRemoteCoord updateSlave() {
+	synchronized public JvnRemoteCoordExtended updateSlave() {
 		try {
-			this.slave = ((JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoordSlave_"+ this.id));
+			this.slave = ((JvnRemoteCoordExtended) this.rmiRegistry.lookup("JvnCoordSlave_"+ this.id));
 		} catch (@SuppressWarnings("unused") RemoteException | NotBoundException e) {
 			try {
 				Thread.sleep(TIMEOUT);
-				this.slave = ((JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoordSlave_"+ this.id));
+				this.slave = ((JvnRemoteCoordExtended) this.rmiRegistry.lookup("JvnCoordSlave_"+ this.id));
 			} catch (@SuppressWarnings("unused") Exception e1) {
 				this.slave = null;
 			}
@@ -254,7 +254,7 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 
 	@Override
 	public void upgrade() throws RemoteException, JvnException {
-		throw new JvnException("déjà master lol");
+		throw new JvnException("operation impossible");
 	}
 	
 	@Override

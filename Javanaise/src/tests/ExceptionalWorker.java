@@ -27,7 +27,7 @@ public class ExceptionalWorker {
 		aString.getS();
 		System.out.println("[ExceptionalWorker]: busy (" + 0 + "% completed)");
 		for(int i = 1; i <= 10; i++) {
-			Thread.sleep(1000);
+			Thread.sleep(500);
 			System.out.println("[ExceptionalWorker]: busy (" + i*10 + "% completed)");
 		}
 		try {
@@ -41,6 +41,7 @@ public class ExceptionalWorker {
 		System.out.println("[ExceptionalWorker]: FINISHED @ "+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS")));
 	}
 
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws IllegalArgumentException, JvnObjectNotFoundException, JvnException, InterruptedException {
 		new ExceptionalWorker();
 	}

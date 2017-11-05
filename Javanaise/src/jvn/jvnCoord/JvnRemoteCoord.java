@@ -5,7 +5,7 @@
  * Authors: 
  */
 
-package jvn.jvnCoord.JvnLogicalCoord;
+package jvn.jvnCoord;
 
 import java.rmi.*;
 
@@ -80,19 +80,6 @@ public interface JvnRemoteCoord extends Remote {
 	 * @throws JvnException
 	 */
 	public void invalidateKey(int joi, Serializable o, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
-
-	public void jvnLockWriteSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException;
-	
-	public void upgrade() throws RemoteException, JvnException;
-
-	public void kill() throws RemoteException, JvnException;
-	
-	public void ping() throws RemoteException;
-
-	public JvnSlaveInitData getData() throws RemoteException, JvnException;
-
-	void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws RemoteException, JvnException;
-
 }
 
 

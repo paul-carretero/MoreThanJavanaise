@@ -1,4 +1,4 @@
-package tests;
+package tests.Junits;
 
 import static org.junit.Assert.*;
 import java.util.LinkedList;
@@ -34,9 +34,9 @@ public class JvnObjectTransactionTest {
 	@SuppressWarnings("static-method")
 	@Before
 	public void initialize() throws Exception {
-		JvnObjectTest1 = ((StringObjectItf) JvnProxy.newInstance(new StringObject("JvnObjectTest1 - "), "JvnObjectTest1"));
-		JvnObjectTest2 = ((StringObjectItf) JvnProxy.newInstance(new StringObject("JvnObjectTest2 - "), "JvnObjectTest2"));
-		JvnObjectTest3 = ((StringObjectItf) JvnProxy.newInstance(new StringObject("JvnObjectTest3 - "), "JvnObjectTest3"));
+		JvnObjectTest1 = ((StringObjectItf) JvnProxy.newInstance(new StringObject("JvnObjectTest1 - "), "JvnObjectTest-1"));
+		JvnObjectTest2 = ((StringObjectItf) JvnProxy.newInstance(new StringObject("JvnObjectTest2 - "), "JvnObjectTest-2"));
+		JvnObjectTest3 = ((StringObjectItf) JvnProxy.newInstance(new StringObject("JvnObjectTest3 - "), "JvnObjectTest-3"));
 		JvnObjectTest1.setS("JvnObjectTest1 - ");
 		JvnObjectTest2.setS("JvnObjectTest2 - ");
 		JvnObjectTest3.setS("JvnObjectTest3 - ");
@@ -127,11 +127,17 @@ public class JvnObjectTransactionTest {
 		JvnObjectTest1.setS("before-1");
 		JvnObjectTest2.setS("before-2");
 		JvnObjectTest3.setS("before-3");
+		assertEquals("commit verification", "before-1", JvnObjectTest1.getS());
+		assertEquals("commit verification", "before-2", JvnObjectTest2.getS());
+		assertEquals("commit verification", "before-3", JvnObjectTest3.getS());
 		JvnServerImpl.jvnGetServer().beginTransaction();
 		JvnObjectTest1.setS("random-1");
+		assertEquals("commit verification", "random-1", JvnObjectTest1.getS());
 		JvnObjectTest2.getS();
 		JvnObjectTest3.setS("after-3");
+		assertEquals("commit verification", "after-3", JvnObjectTest3.getS());
 		JvnObjectTest1.setS("after-1");
+		assertEquals("commit verification", "after-1", JvnObjectTest1.getS());
 		JvnServerImpl.jvnGetServer().rollbackTransaction();
 		assertEquals("commit verification", "before-1", JvnObjectTest1.getS());
 		assertEquals("commit verification", "before-2", JvnObjectTest2.getS());

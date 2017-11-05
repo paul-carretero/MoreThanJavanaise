@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jvn.jvnCoord.JvnLogicalCoord.JvnRemoteCoord;
+import jvn.jvnCoord.JvnRemoteCoord;
 import jvn.jvnExceptions.JvnException;
 import jvn.jvnExceptions.JvnPreemptiveInvalidationException;
 import jvn.jvnExceptions.JvnTransactionException;
@@ -118,7 +118,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	}
 
 	/**
-	 * TODO : remetre la synchro, désactivé pour pouvoir tester (le coord utilise le même moniteur)
 	 *  Associate a symbolic name with a JVN object
 	 * @param jon : the JVN object name
 	 * @param jo : the JVN object 
@@ -126,7 +125,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 **/
 	@Override
 	public void jvnRegisterObject(final String jon, final JvnObject jo) throws jvn.jvnExceptions.JvnException {
-		//synchronized (jon.intern()) {
+		synchronized (jon.intern()) {
 			try {
 				this.jvnRemoteCoord.jvnRegisterObject(jon, jo, this);
 				this.LocalsJvnObject.put(jo, jon);
@@ -134,7 +133,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 				e.printStackTrace();
 				throw new JvnException("Erreur lors de l'enregistrement de l'objet");
 			}
-		//}
+		}
 	}
 
 	/**
@@ -214,7 +213,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	@Override
-	public Serializable jvnInvalidateWriter(final int joi) throws RemoteException, JvnException { 
+	public Serializable jvnInvalidateWriter(final int joi) throws RemoteException, JvnException {
 		Serializable o = this.LocalsJvnObject.get(joi).jvnInvalidateWriter();
 		this.LocalsJvnObject.get(joi).setSerializableObject(o);
 		return o;
@@ -235,10 +234,11 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 
 	/**
 	 * @param joi identifiant de l'objet supprime du cache local
+	 * @param o l'objet applicatif associé
 	 */
-	public void invalideKey(final int joi) {
+	public void invalideKey(final int joi, Serializable o) {
 		try {
-			this.jvnRemoteCoord.invalidateKey(joi,this.LocalsJvnObject.get(joi).jvnGetObjectState(),this);
+			this.jvnRemoteCoord.invalidateKey(joi,o,this);
 			this.LocalsJvnObject.removeFromAssocMap(joi);
 		} catch (RemoteException | JvnException e) {
 			e.printStackTrace();
@@ -321,7 +321,8 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	
 	@Override
 	synchronized public void writeRegisterInTransaction(final JvnObject jo) throws JvnTransactionException, JvnException {
-		checkTransactData(jo);		
+		checkTransactData(jo);
+		System.out.println("lolxd???");
 		this.transactMasterMap.get(Thread.currentThread()).get(jo.jvnGetObjectId()).write(jo.jvnGetObjectState());
 	}
 }

@@ -20,7 +20,7 @@ public class Shared {
 	 * @param msg un message de log
 	 */
 	public static void log(final String what, final String msg) {
-		System.out.println("["+what+"] : "+msg);
+		//System.out.println("["+what+"] : "+msg);
 	}
 
 	public static void setRMITimeout() throws IOException {

@@ -1,4 +1,4 @@
-package tests;
+package tests.Junits;
 
 import static org.junit.Assert.*;
 
@@ -53,17 +53,17 @@ public class JvnObjectTest implements Serializable{
 		JvnObjectImpl JvnObjectTest2 = new JvnObjectImpl(1001, "JvnObjectTest2 - ");
 		JvnObjectImpl JvnObjectTest3 = new JvnObjectImpl(1002, "JvnObjectTest3 - ");
 		
-		assertEquals("lock write sur jvnObject1", JvnObjectTest1.jvngetLock(), LockState.WRITE);
-		assertEquals("lock write sur jvnObject2", JvnObjectTest2.jvngetLock(), LockState.WRITE);
-		assertEquals("lock write sur jvnObject3", JvnObjectTest3.jvngetLock(), LockState.WRITE);
+		assertEquals("lock write sur jvnObject1", LockState.WRITECACHED, JvnObjectTest1.jvngetLock());
+		assertEquals("lock write sur jvnObject2", LockState.WRITECACHED, JvnObjectTest2.jvngetLock());
+		assertEquals("lock write sur jvnObject3", LockState.WRITECACHED, JvnObjectTest3.jvngetLock());
 
 		JvnObjectTest1.jvnUnLock();
 		JvnObjectTest2.jvnUnLock();
 		JvnObjectTest3.jvnUnLock();
 
-		assertEquals("lock write cached sur jvnObject1", JvnObjectTest1.jvngetLock(), LockState.WRITECACHED);
-		assertEquals("lock write cached sur jvnObject2", JvnObjectTest2.jvngetLock(), LockState.WRITECACHED);
-		assertEquals("lock write cached sur jvnObject3", JvnObjectTest3.jvngetLock(), LockState.WRITECACHED);
+		assertEquals("lock write cached sur jvnObject1", LockState.WRITECACHED, JvnObjectTest1.jvngetLock());
+		assertEquals("lock write cached sur jvnObject2", LockState.WRITECACHED, JvnObjectTest2.jvngetLock());
+		assertEquals("lock write cached sur jvnObject3", LockState.WRITECACHED, JvnObjectTest3.jvngetLock());
 
 		JvnObjectTest1.jvnLockRead();
 		assertEquals("lock write cached sur jvnObject1", JvnObjectTest1.jvngetLock(), LockState.WRITECACHEDREAD);

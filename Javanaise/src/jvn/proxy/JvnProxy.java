@@ -1,6 +1,8 @@
 package jvn.proxy;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -46,7 +48,7 @@ public class JvnProxy implements InvocationHandler {
 			throw new JvnProxyException("Erreur durant le l'initialisation du proxy");
 		}
 	} 
-	
+
 	/**
 	 * recherche un objet applicatif existant
 	 * @param jon le nom de l'objet serializable
@@ -54,7 +56,7 @@ public class JvnProxy implements InvocationHandler {
 	 * @throws JvnException 
 	 */
 	private JvnProxy(final String jon) throws JvnObjectNotFoundException, JvnException{
-		this.jvnObject = jvnLocalServer.jvnLookupObject(jon); // celui de classe est "final" car c'est beau
+		this.jvnObject = jvnLocalServer.jvnLookupObject(jon);
 		if(this.jvnObject == null){
 			throw new JvnObjectNotFoundException(jon);
 		}
@@ -62,7 +64,8 @@ public class JvnProxy implements InvocationHandler {
 
 	@Override
 	public Object invoke(final Object unused, final Method invokedMethod, final Object[] args) throws Throwable {
-		if(invokedMethod.isAnnotationPresent(LockAsked.class)){ 
+		getReferencedJvnObject(this.jvnObject.jvnGetObjectState());
+		if(invokedMethod.isAnnotationPresent(LockAsked.class)){
 			LockAsked l = invokedMethod.getAnnotation(LockAsked.class); 
 			switch (l.lock()) {
 			case READ:
@@ -73,6 +76,7 @@ public class JvnProxy implements InvocationHandler {
 				break;
 			case WRITE:
 				this.jvnObject.jvnLockWrite();
+				System.out.println(jvnLocalServer.isInTransaction());
 				if(jvnLocalServer.isInTransaction()) {
 					jvnLocalServer.writeRegisterInTransaction(this.jvnObject);
 				}
@@ -92,6 +96,28 @@ public class JvnProxy implements InvocationHandler {
 		}
 	}
 
+	private static void getReferencedJvnObject(final Serializable obj) {
+		for(Field field : obj.getClass().getDeclaredFields()){
+			Annotation[] annotations			= field.getDeclaredAnnotations();
+			Class<? extends Serializable> c;
+			String ref;
+			try {
+				if(field.get(obj) == null) {
+					for(Annotation a : annotations) {
+						if(a.annotationType() == JvnReference.class) {
+							c	= ((JvnReference) a).objectClass();
+							ref	= ((JvnReference) a).objectReference();
+							try {
+								field.set(obj, getRemoteInstance(c,ref));
+							} catch (IllegalArgumentException | IllegalAccessException | JvnException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			} catch (@SuppressWarnings("unused") IllegalArgumentException | IllegalAccessException e) {}
+		}
+	}
 
 	/**
 	 * @param obj la classe de l'objet à créer si non existant
@@ -100,10 +126,10 @@ public class JvnProxy implements InvocationHandler {
 	 * @throws IllegalArgumentException
 	 * @throws JvnProxyException
 	 */
-	public static Object newInstance(final Serializable obj, final String jon) throws IllegalArgumentException, JvnProxyException{ 
+	public static Object newInstance(final Serializable obj, final String jon) throws IllegalArgumentException, JvnProxyException{
 		return Proxy.newProxyInstance(obj.getClass().getClassLoader(), obj.getClass().getInterfaces(), new JvnProxy(obj,jon)); 
 	}
-	
+
 	/**
 	 * @param objectClass la classe de l'objet à rechercher
 	 * @param jon le nom de l'objet applicatif à rechercher

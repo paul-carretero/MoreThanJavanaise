@@ -285,7 +285,7 @@ public class JvnObjectImpl implements JvnObject {
 	}
 
 	@Override
-	public Serializable jvnGetObjectState() throws JvnException {
+	public Serializable jvnGetObjectState(){
 		return this.serializableObject;
 	}
 

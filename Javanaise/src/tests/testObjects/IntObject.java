@@ -7,6 +7,10 @@ public class IntObject implements IntObjectItf {
 	
 	public IntObject() {}
 	
+	public IntObject(int j) {
+		this.i = j;
+	}
+
 	@Override
 	public void set(int n) {this.i = n;}
 	@Override

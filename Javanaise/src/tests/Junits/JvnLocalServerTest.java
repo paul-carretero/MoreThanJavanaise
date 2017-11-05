@@ -1,4 +1,4 @@
-package tests;
+package tests.Junits;
 
 import static org.junit.Assert.*;
 
@@ -18,8 +18,8 @@ import tests.testObjects.StringObjectItf;
 
 public class JvnLocalServerTest implements Serializable{
 
-	private static final long serialVersionUID 	= -6778422767501106604L;
-	private static final int 	ITERATION 		= 200;
+	private static final long serialVersionUID 		= -6778422767501106604L;
+	private static final int 	ITERATION 			= 200;
 	private final static List<Integer> actualObject	= new ArrayList<Integer>();
 
 	@BeforeClass

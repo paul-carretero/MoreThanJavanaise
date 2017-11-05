@@ -25,7 +25,7 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 		Naming.rebind(HOST+"JvnCoordSlave_"+ this.id, this);
 		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"] [UP]");
 		try {
-			JvnSlaveInitData data	= ((JvnRemoteCoord) this.rmiRegistry.lookup("JvnCoord_"+ this.id)).getData();
+			JvnSlaveInitData data	= ((JvnRemoteCoordExtended) this.rmiRegistry.lookup("JvnCoord_"+ this.id)).getData();
 			this.jvnObjects 		= data.getJvnObjects();
 			this.objectLocks.putAll(data.getObjectLocks());
 			this.waitingWriters.putAll(data.getWaitingWriters());
