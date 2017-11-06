@@ -281,9 +281,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 		if(!isInTransaction()) {
 			throw new JvnTransactionException("pas dans une transaction, rollback impossible");
 		}
-		
-		System.out.println(this.transactMasterMap.get(Thread.currentThread()).size());
-		
+				
 		for (Entry<Integer, JvnTransactData> entry : this.transactMasterMap.get(Thread.currentThread()).entrySet())
 		{
 			if(entry.getValue().haveBackup()) {
@@ -322,7 +320,6 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 	@Override
 	synchronized public void writeRegisterInTransaction(final JvnObject jo) throws JvnTransactionException, JvnException {
 		checkTransactData(jo);
-		System.out.println("lolxd???");
 		this.transactMasterMap.get(Thread.currentThread()).get(jo.jvnGetObjectId()).write(jo.jvnGetObjectState());
 	}
 }

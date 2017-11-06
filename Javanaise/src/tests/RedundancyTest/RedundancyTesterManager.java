@@ -12,6 +12,12 @@ import tests.testObjects.CollaborativeBarrierItf;
 import tests.testObjects.CollaborativeObject;
 import tests.testObjects.CollaborativeObjectItf;
 
+/**
+ * @author Paul Carretero
+ * Programme de test permettant de lancer un programme visant à tester le bon fonctionnement de la redondance
+ * Permet notament d'interrompre le coordinateur avec un haut niveau de succès (dû à la synchro)
+ */
+@SuppressWarnings("javadoc")
 public class RedundancyTesterManager {
 
 	public RedundancyTesterManager(String[] args) throws NumberFormatException, JvnException, InterruptedException, IOException {

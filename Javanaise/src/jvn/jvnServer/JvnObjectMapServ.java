@@ -38,7 +38,6 @@ public class JvnObjectMapServ extends JvnObjectMap {
 	public void put(JvnObject jo, String jon) throws JvnException {
 		synchronized(jon.intern()){
 			if(this.assocMap.containsKey(jo.jvnGetObjectId())) {
-				System.out.println(this.assocMap);
 				throw new JvnException("Impossible d'ajouter l'objet en cache : clé dupliquée");
 			}
 			this.LocalsJvnObject.put(jon, jo);
@@ -55,6 +54,11 @@ public class JvnObjectMapServ extends JvnObjectMap {
 		this.assocMap.remove(joi);
 	}
 	
+	/**
+	 * met à jour l'objet applicatif d'un objet javanaise
+	 * @param joi l'identifiant d'un objet javanaise
+	 * @param o la nouvelle version de l'objet applicatif
+	 */
 	public void updateJvnObject(final int joi, final Serializable o) {
 		this.LocalsJvnObject.get(this.assocMap.get(joi)).setSerializableObject(o);
 	}

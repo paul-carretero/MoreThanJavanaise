@@ -76,7 +76,6 @@ public class JvnProxy implements InvocationHandler {
 				break;
 			case WRITE:
 				this.jvnObject.jvnLockWrite();
-				System.out.println(jvnLocalServer.isInTransaction());
 				if(jvnLocalServer.isInTransaction()) {
 					jvnLocalServer.writeRegisterInTransaction(this.jvnObject);
 				}

@@ -163,7 +163,6 @@ public class CallHandler implements JvnRemoteCoord{
 			try {
 				this.jvnCoords[idCoord].jvnTerminate(js);
 			} catch (@SuppressWarnings("unused") RemoteException e) {
-				System.out.println(idCoord);
 				refreshCoord(idCoord);
 				this.jvnCoords[idCoord].jvnTerminate(js);
 			}

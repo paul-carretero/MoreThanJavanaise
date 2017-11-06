@@ -1,5 +1,9 @@
 package jvn.jvnExceptions;
 
+/**
+ * @author Paul Carretero
+ * Exception levé lorsqu'une erreur avec une transaction est rencontrée
+ */
 public class JvnTransactionException extends JvnException {
 
 	/**

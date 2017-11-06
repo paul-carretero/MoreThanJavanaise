@@ -1,5 +1,9 @@
 package jvn.jvnExceptions;
 
+/**
+ * @author Paul Carretero
+ * Excpetion levée lorsqu'un objet n'est pas trouvé par un coordinateur (nom d'objet absent de la base)
+ */
 public class JvnObjectNotFoundException extends JvnException {
 
 	/**

@@ -135,6 +135,12 @@ public class JvnObjectImpl implements JvnObject {
 		}
 	}
 
+	/**
+	 * Demande un verrou en ecriture au coordinateur si l'on ne n'en dispose pas déjà (ou mieux).
+	 * @return true si l'on dispose du verrou en ecriture, 
+	 * faux si on recevra un callback du coordinateur pour le donner au serveur de cache ulterieurement
+	 * @throws JvnException
+	 */
 	synchronized public boolean jvnLockWriteHandler() throws JvnException {
 		Serializable o;
 		switch (this.lock) {
