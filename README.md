@@ -5,7 +5,7 @@
    <li>Javanaise V1 (service d'objet avec cache)</li>
    <li>Support multithreading serveur client</li>
    <li>Cache local de capacité fini avec politique d'éviction de type LRU</li>
-   <li>Support des transactions sur plusieurs objets</li>
+   <li>Support des transactions sur plusieurs objets (1 transaction par thread gérée)</li>
    <li>Levée d'exception lorsqu'une tentative d'upgrade de verrou echoue (Concurrent lock upgrade)</li>
    <li>tentative de reconnection en cas d'echec de connexion avec le coordinateur</li>
    <li>proxy (Javanaise V2)</li>
@@ -18,6 +18,7 @@
    <li>Javanaise V1 (standard)</li>
    <li>Redondance master/slave</li>
    <li>Synchro avec slave asynchrone (pas de perte de latence avec le client)</li>
+   <li>Multithreadé et accès concurrent (par objet unique)</li>
 </ul>
 
 
