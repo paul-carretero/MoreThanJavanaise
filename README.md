@@ -1,6 +1,6 @@
 # MoreThanJavanaise
 
-<h2>Fonctionalitées Client (serveur)</h2>
+<h2>Fonctionnalités Client (serveur)</h2>
 <ul>
    <li>Javanaise V1 (service d'objet avec cache)</li>
    <li>Support multithreading serveur client</li>
@@ -13,7 +13,7 @@
 </ul>
 
 
-<h2>Fonctionalitées Coordinateurs</h2>
+<h2>Fonctionnalités Coordinateurs</h2>
 <ul>
    <li>Javanaise V1 (standard)</li>
    <li>Redondance master/slave</li>
@@ -22,7 +22,7 @@
 </ul>
 
 
-<h2>Fonctionalitées LoadBalancer</h2>
+<h2>Fonctionnalités LoadBalancer</h2>
 <ul>
    <li>Répartition de charge entre plusieurs coordinateurs (à l'initialisation)</li>
    <li>Redance master/slave (upgrade auto du slave)</li>
