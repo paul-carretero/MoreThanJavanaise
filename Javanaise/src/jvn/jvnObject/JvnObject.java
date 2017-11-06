@@ -36,7 +36,6 @@ public interface JvnObject extends Serializable {
 
 	/**
 	 * Unlock  the object 
-	 * @return true cas normal, false si verrou invalidé par le coordinateur
 	 * @throws jvn.jvnExceptions.JvnException
 	 * @throws JvnPreemptiveInvalidationException 
 	 */
@@ -52,7 +51,6 @@ public interface JvnObject extends Serializable {
 	/**
 	 * Get the object state
 	 * @return l'objet applicatif encapsuler dans cet objet javanaise
-	 * @throws JvnException
 	 **/
 	public Serializable jvnGetObjectState(); 
 

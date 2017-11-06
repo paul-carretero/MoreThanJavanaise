@@ -5,6 +5,10 @@ import java.rmi.RemoteException;
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnExceptions.JvnException;
 
+/**
+ * @author Paul Carretero
+ * Interface permettant aux loadbalancer de communiquer entre eux et de donner des identifiant d'objet
+ */
 public interface JvnLoadBalancer extends Remote {
 
 	/**
@@ -37,5 +41,18 @@ public interface JvnLoadBalancer extends Remote {
 	 */
 	public void ping() throws RemoteException;
 	
+	/**
+	 * met à jour la map des coordinateurs du slave (depuis celle du master)
+	 * @param jcm une map des coordinateurs
+	 * @throws RemoteException
+	 * @throws JvnException
+	 */
 	public void updateJvnCoordMap(JvnCoordMap jcm) throws RemoteException, JvnException;
+
+	/**
+	 * @return l'id actuel pour synchro
+	 * @throws RemoteException
+	 * @throws JvnException 
+	 */
+	public int jvnInitObjectId() throws RemoteException, JvnException;
 }

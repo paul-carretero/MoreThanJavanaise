@@ -11,14 +11,32 @@ import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
+/**
+ * @author Paul Carretero
+ * Coordinateur slave
+ * Recoit des mise à jour d'un coordinateur master.
+ * Peut, à la demande du loadbalancer, créer un coordinateur master avec ses données et se détruire.
+ * est associé qu'à un unique master (et donc à son id)
+ */
 public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = 7394367557661106177L;
+
+	/**
+	 * id de ce coordinateur
+	 */
 	private final int id;
 
+	/**
+	 * constructeur par défault
+	 * @param id l'id associé à ce slave coordinateur
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 * @throws JvnException
+	 */
 	public JvnSlaveCoordImpl(int id) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.id = id;
@@ -54,17 +72,17 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
 		throw new JvnException("need serializable");
 	}
-	
+
 	// ordonné et séquentiel par objet par le master dans l'ordre de traitement
-		@Override
-		public void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-			if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
-				this.jvnObjects.addReadingServer(joi, this.jvnObjects.getWritingServer(joi));
-				this.jvnObjects.setWritingServer(joi, null);
-			}
-			this.jvnObjects.addReadingServer(joi, js);
-			this.jvnObjects.get(joi).setSerializableObject(o);
+	@Override
+	public void jvnLockReadSync(Serializable o, int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
+		if(this.jvnObjects.getWritingServer(joi) != null && !this.jvnObjects.getWritingServer(joi).equals(js)) {
+			this.jvnObjects.addReadingServer(joi, this.jvnObjects.getWritingServer(joi));
+			this.jvnObjects.setWritingServer(joi, null);
 		}
+		this.jvnObjects.addReadingServer(joi, js);
+		this.jvnObjects.get(joi).setSerializableObject(o);
+	}
 
 	// ordonné et séquentiel par objet par le master dans l'ordre de traitement
 	@Override
@@ -94,8 +112,8 @@ public class JvnSlaveCoordImpl extends JvnAbstractCoord{
 	public void kill() {
 		try {
 			Naming.unbind(HOST+"JvnCoordSlave_"+ this.id);
-		 	unexportObject(this,true);
-		 	this.finalize();
+			unexportObject(this,true);
+			this.finalize();
 		} catch (@SuppressWarnings("unused") Throwable e) {}
 		System.out.println("[COORDINATEUR] [SLAVE] ["+this.id+"] [DOWN]");
 	}

@@ -70,16 +70,44 @@ public interface JvnLocalServer {
 	 **/
 	public void jvnTerminate() throws jvn.jvnExceptions.JvnException; 
 	
+	/**
+	 * Demande au serveur la création d'une transaction pour le thread courrant
+	 * @throws JvnTransactionException si une transaction est déjà en cours
+	 */
 	public void beginTransaction() throws JvnTransactionException;
 	
+	/**
+	 * demande au serveur de valider la transaction pour le thread courrant
+	 * @throws JvnPreemptiveInvalidationException
+	 * @throws JvnException
+	 * @throws JvnTransactionException si il n'y a pas de transaction à commiter
+	 */
 	public void commitTransaction() throws JvnPreemptiveInvalidationException, JvnException, JvnTransactionException;
 	
+	/**
+	 * demande au serveur d'annuler la transaction pour le thread courrant
+	 * @throws JvnPreemptiveInvalidationException
+	 * @throws JvnException
+	 * @throws JvnTransactionException si il n'y a pas de transaction à rollback
+	 */
 	public void rollbackTransaction() throws JvnPreemptiveInvalidationException, JvnException, JvnTransactionException;
 
+	/**
+	 * @return true si le thread courrant est dans une transaction, false sinon
+	 */
 	public boolean isInTransaction();
 
-	public void writeRegisterInTransaction(JvnObject jvnObject) throws JvnTransactionException, JvnException;
+	/**
+	 * @param jo un objet JVN à ajouter à la transaction avec un verrou en ecriture
+	 * @throws JvnTransactionException
+	 * @throws JvnException
+	 */
+	public void writeRegisterInTransaction(JvnObject jo) throws JvnTransactionException, JvnException;
 
+	/**
+	 * @param jo un objet JVN à ajouter à la transaction avec un verrou en lecture
+	 * @throws JvnTransactionException
+	 */
 	public void readRegisterInTransaction(JvnObject jo) throws JvnTransactionException;
 }
 

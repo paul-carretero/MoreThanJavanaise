@@ -16,25 +16,58 @@ import java.util.Set;
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnExceptions.JvnException;
 
+/**
+ * @author Paul Carretero
+ * Représentation logique de l'ensemble des Coordinateurs disponible pour un loadbalancer.
+ * Cette représentation contient les master et les slave
+ * Les master et les slaves sont associés à la machine physique qui les a lancée
+ * En temps que thread, la JvnCoordMapva également envoyer régulièrement un ping à chaqune des machine physique afin
+ * de vérifier si celle ci est toujours active
+ * En fonction des besoin des methodes permetterons de déployer d'autre 
+ * Coordinateurs (master ou slave) sur les machines physique disponible
+ */
 public class JvnCoordMap extends Thread implements Serializable {
 
-	// Coordinateurs Logique
-
+	/**
+	 * Délai entre deux vérification des machine physique
+	 */
 	private static final int REFRESH = 1000;
+	
+	/**
+	 * Délai avant une nouvelle tentative en cas d'echec de connexion
+	 */
 	private static final int TIMEOUT = 3000;
+	
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = -7390263206317147214L;
 
+	/**
+	 * Map associant une machine physique avec un ensemble d'id 
+	 * auxquels des coordinateur master de cette machine physique sont associé
+	 */
 	private final Map<JvnRemotePhysical, Set<Integer>> masterlists;
 
+	/**
+	 * Map associant une machine physique avec un ensemble d'id 
+	 * auxquels des coordinateur slave de cette machine physique sont associé
+	 */
 	private final Map<JvnRemotePhysical, Set<Integer>> slavelists;
 
+	/**
+	 * Nombre de coordinateur (nombre d'id)
+	 */
 	private final int numberOfCluster;
 
+	/**
+	 * Slave du loadbalancer sur lequelle dupliquer les opérations
+	 */
 	private transient JvnLoadBalancer slave;
 
+	/**
+	 * Registre rmi local
+	 */
 	private transient Registry rmiRegistry;
 
 	/**
@@ -54,14 +87,21 @@ public class JvnCoordMap extends Thread implements Serializable {
 		getSlaveLoadBalancer();
 	}
 	
+	/**
+	 * Tente de lancer un loadbalancer slave sur une machine physique
+	 * Selectionne de préférence une peu chargé en coordinateur
+	 * @throws RemoteException
+	 */
 	synchronized protected void newSlaveLoadBalancer() throws RemoteException {
 		try {
 			getLessUsedJVMWithoutLB().jvnNewSlaveLoadBalancer();
-		}catch (@SuppressWarnings("unused") NullPointerException e) {
-			// there is no jvm available, do nothing
-		}
+		}catch (@SuppressWarnings("unused") NullPointerException e) {}
 	}
 
+	/**
+	 * recherche et re-défini le loadbalancer slave (par exemple en cas d'echec des communications)
+	 * @return le loadbalancer slave mis à jour
+	 */
 	synchronized protected JvnLoadBalancer getSlaveLoadBalancer() {
 		if(this.rmiRegistry == null) {
 			try {
@@ -103,11 +143,20 @@ public class JvnCoordMap extends Thread implements Serializable {
 		}
 	}
 
+	/**
+	 * Calcul le nombre maximum de coordinateur par jvm en fonction du nombre de coordinateur souhaité
+	 * @return le nombre maximum d'instance de coordinateur 
+	 * d'une machine physique peut supporté afin de garantir un bon équilibrage des charges
+	 */
 	synchronized private int getMaxInstancePerJVM() {
 		assert(this.masterlists.size() == this.slavelists.size());
 		return (int) Math.ceil(2 * Float.valueOf(this.numberOfCluster) / Float.valueOf(this.masterlists.size()));
 	}
 
+	/**
+	 * @param id un id de coordinateur master
+	 * @return true si ce coordinateur à un slave, false sinon
+	 */
 	synchronized private boolean haveSlave(int id) {
 		for(Set<Integer> slaves : this.slavelists.values()) {
 			if(slaves.contains(id)) {
@@ -117,6 +166,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 		return false;
 	}
 
+	/**
+	 * @return un Set des id de coordinateur master n'ayant aucun slave (sans redondance)
+	 */
 	synchronized private Set<Integer> getSetOfNoSlaveMaster() {
 		Set<Integer> res = new HashSet<>();
 		for(Set<Integer> masterEntries : this.masterlists.values()) {
@@ -129,6 +181,10 @@ public class JvnCoordMap extends Thread implements Serializable {
 		return res;
 	}
 
+	/**
+	 * Lance si possible des slaves pour les coordinateur master sans slave (sans redondance)
+	 * Ne fait rien si seulement une machine physique est disponible
+	 */
 	synchronized private void launchMissingSlave() {
 		if(this.slavelists.size() > 1) {
 			Set<Integer> noSlaveMaster = getSetOfNoSlaveMaster();
@@ -145,6 +201,11 @@ public class JvnCoordMap extends Thread implements Serializable {
 	}
 	
 
+	/**
+	 * Methode permettant de re-organiser les coordinateur sur les différentes machine physique
+	 * Si possible, chaque coordinateur sera en double (master+slave)
+	 * le nombre de coordinateur entre chaque machine physique sera réparti au mieux afin d'équilibrer la charge
+	 */
 	synchronized protected void reArrangeCoords() {
 		launchMissingSlave();
 		int max = getMaxInstancePerJVM();
@@ -196,18 +257,10 @@ public class JvnCoordMap extends Thread implements Serializable {
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private void printMap() {
-		System.out.println("master:");
-		for(Set<Integer> s: this.masterlists.values()) {
-			System.out.println(s);
-		}
-		System.out.println("slaves:");
-		for(Set<Integer> s: this.slavelists.values()) {
-			System.out.println(s);
-		}
-	}
-
+	/**
+	 * @param coordId un id de coordinateur master
+	 * @return le JvnRemotePhysical associé au slave de ce coordinateur master (son id)
+	 */
 	synchronized private JvnRemotePhysical getSlaveOfMaster(Integer coordId) {
 		for(Entry<JvnRemotePhysical, Set<Integer>> test : this.slavelists.entrySet()) {
 			if(test.getValue().contains(coordId)) {
@@ -240,9 +293,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 	}
 
 	/**
-	 * 
-	 * @param id
-	 * @param physRemote
+	 * Lance un coordinateur master ayant l'id spécifié sur une machine physique
+	 * @param id un id de coordinateur master
+	 * @param physRemote une machine physique
 	 * @throws JvnException si il existe déjà un slave pour ce cluster
 	 */
 	synchronized private void startMasterCoord(int id, JvnRemotePhysical physRemote) throws JvnException {
@@ -278,6 +331,12 @@ public class JvnCoordMap extends Thread implements Serializable {
 		updateSlave();
 	}
 
+	/**
+	 * Envoie un ping à chaque machine physique.
+	 * Si le ping echoue alors supprime la machine physique des liste des coordinateur slave et master
+	 * Les slaves des masters supprimés seront upgrader en master afin de continuer les opérations
+	 * Les slaves manquant aux masters seront également lancé sur d'autre machine physique si possible
+	 */
 	synchronized protected void heartbeat() {
 		List<JvnRemotePhysical> tempDead = new LinkedList<>();
 		for(JvnRemotePhysical frp : this.masterlists.keySet()) {	
@@ -319,6 +378,10 @@ public class JvnCoordMap extends Thread implements Serializable {
 		}
 	}
 
+	/**
+	 * Envoie au loadbalancer slave une copie de cette classe afin de garantir la redondance
+	 * En cas d'echec tentera de rechercher ou créer un autre loadbalancer slave
+	 */
 	synchronized protected void updateSlave() {
 		if(this.slave == null) {
 			getSlaveLoadBalancer();
@@ -340,6 +403,11 @@ public class JvnCoordMap extends Thread implements Serializable {
 		}
 	}
 
+	/**
+	 * Recherche la machine physique la moins utilisé et ne possédant pas de master pour un id de coordinateur donné
+	 * @param id un id de coordinateur
+	 * @return une machine physique sur laquelle lancer un slave ayant l'id spécifié
+	 */
 	private JvnRemotePhysical getLessUsedJVMWithoutIdForSlave(int id) {
 		JvnRemotePhysical res	= null;
 		int instanceOnRes 		= Integer.MAX_VALUE;
@@ -356,6 +424,9 @@ public class JvnCoordMap extends Thread implements Serializable {
 		return res;
 	}
 
+	/**
+	 * @return une machine physique sans loadbalancer la moins utilisé
+	 */
 	private JvnRemotePhysical getLessUsedJVMWithoutLB() {
 		JvnRemotePhysical res = null;
 		int instanceOnRes = Integer.MAX_VALUE;

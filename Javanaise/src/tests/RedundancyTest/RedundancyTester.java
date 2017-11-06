@@ -13,6 +13,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
+/**
+ * @author Paul Carretero
+ * programme de test de la redondance
+ * Realise un grand nombre de demande de verrou afin de construire une liste d'entier avec d'autre programme
+ * Ne doit pas s'arréter lorsqu'un coordinateur est arrété
+ */
+@SuppressWarnings("javadoc")
 public class RedundancyTester {
 	
 	private static int iteration = 100;

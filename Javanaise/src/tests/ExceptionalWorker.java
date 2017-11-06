@@ -10,7 +10,13 @@ import jvn.jvnServer.JvnServerImpl;
 import jvn.proxy.JvnProxy;
 import tests.testObjects.StringObjectItf;
 import tests.testObjects.StringObject;
-
+/**
+ * @author Paul Carretero
+ * Test permettant, si lancé 2 fois, de mettre en évidence un cas de deadlock
+ * les 2 possède un verrou en lecture et tente de l'upgrader en ecriture
+ * le second à faire la tentative aura une levé d'exception
+ */
+@SuppressWarnings("javadoc")
 public class ExceptionalWorker {
 
 	public ExceptionalWorker() throws IllegalArgumentException, JvnObjectNotFoundException, JvnException, InterruptedException {

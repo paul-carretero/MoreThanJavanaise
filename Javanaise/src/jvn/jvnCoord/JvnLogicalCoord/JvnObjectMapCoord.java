@@ -13,15 +13,32 @@ import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
+/**
+ * @author Paul Carretero
+ * représentation des objets géré par un coordinateur
+ * Contient divers informations sur ceux si comme les serveurs disposant de verroux sûr ceux si
+ */
 public class JvnObjectMapCoord extends JvnObjectMap{
 
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = -1440979092572164334L;
+	
+	/**
+	 * liste des serveur ayant un verrou en lecture sur un objet (id=>liste de serveur)
+	 */
 	private final Map<Integer,List<JvnRemoteServer>> 	readingServer;
+	
+	/**
+	 * liste des serveur ayant un verrou en ecriture sur un objet (id=>serveur)
+	 */
 	private final Map<Integer,JvnRemoteServer> 			writingServer;
 
+	/**
+	 * constructeur par défault
+	 * initialise les map des verrou
+	 */
 	public JvnObjectMapCoord() {
 		super();
 		this.readingServer		= new ConcurrentHashMap<Integer, List<JvnRemoteServer>>();
@@ -52,26 +69,53 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		}
 	}
 
+	/**
+	 * @param joi un id d'objet JVN
+	 * @return la liste des serveur ayant un verrou en lecture sur cet objet
+	 */
 	public List<JvnRemoteServer> getReadingServer(int joi){
 		return this.readingServer.get(joi);
 	}
 
+	/**
+	 * supprime la liste des serveur ayant un verrou en lecture sur cet objet
+	 * @param joi un id d'objet JVN
+	 */
 	public void resetReadingServer(int joi) {
 		this.readingServer.put(joi, new CopyOnWriteArrayList<JvnRemoteServer>());
 	}
 
+	/**
+	 * @param joi un id d'objet JVN
+	 * @return le serveur ayant un verrou en ecriture sur cet objet ou null si il n'y en a pas
+	 */
 	public JvnRemoteServer getWritingServer(int joi){
 		return this.writingServer.get(joi);
 	}
 
+	/**
+	 * Ajoute un serveur client à la liste des serveur ayant un verrou en lecture sur un objet
+	 * @param joi un id d'objet JVN
+	 * @param js un serveur client
+	 */
 	public void addReadingServer(int joi, JvnRemoteServer js ) {
 		this.readingServer.get(joi).add(js);
 	}
 
+	/**
+	 * supprime le serveur ayant l'id spécifié de la liste des serveur ayant un verrou en lecture pour cet objet
+	 * @param joi un id d'objet JVN
+	 * @param js un serveur client
+	 */
 	public void removeReadingServer(int joi, JvnRemoteServer js ) {
 		this.readingServer.get(joi).remove(js);
 	}
 
+	/**
+	 * défini un serveur ayant un verrou en ecriture pour un objet JVN
+	 * @param joi un identifiant d'objet JVN
+	 * @param js un serveur client
+	 */
 	public void setWritingServer(int joi, JvnRemoteServer js ) {
 		if(js == null) {
 			this.writingServer.remove(joi);
@@ -81,6 +125,11 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		}
 	}
 
+	/**
+	 * supprime un serveur client des listes
+	 * @param js un serveur client
+	 * @param tryUpdate true si l'on doit essayer de récupérer les valeurs du serveur (si verrou en ecriture), false sinon
+	 */
 	public void cleanUpServer(JvnRemoteServer js, boolean tryUpdate) {
 		for(Iterator<Map.Entry<Integer,JvnRemoteServer>> it = this.writingServer.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<Integer,JvnRemoteServer> entry = it.next();
@@ -104,6 +153,12 @@ public class JvnObjectMapCoord extends JvnObjectMap{
 		}
 	}
 
+	/**
+	 * invalide les verroux pour un objet JVN d'un serveur client
+	 * @param joi un id d'objet JVN
+	 * @param o un objet applicatif associé à cet id
+	 * @param js un serveur client
+	 */
 	public void cleanUpKey(int joi, Serializable o, JvnRemoteServer js) {
 		List<JvnRemoteServer> readingServerOnKey = this.readingServer.get(joi);
 		if(readingServerOnKey != null) {

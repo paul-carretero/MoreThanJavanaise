@@ -19,13 +19,43 @@ import jvn.jvnServer.JvnRemoteServer;
  */
 public class CallHandler implements JvnRemoteCoord{
 
+	/**
+	 * registre rmi local
+	 */
 	private final Registry		rmiRegistry;
+	
+	/**
+	 * LoadBalancer par défault
+	 */
 	private JvnLoadBalancer		jvnloadBalancer;
+	
+	/**
+	 * Tableau de l'ensemble des coordinateur, nombre défini à l'initialisation
+	 */
 	private JvnRemoteCoord[]	jvnCoords;
+	
+	/**
+	 * nombre de coordinateur
+	 */
 	private final int 			numberOfCoords;
+	
+	/**
+	 * host rmi local
+	 */
 	private static final String HOST 	= "localhost";
+	
+	/**
+	 * Delai d'attente lorsqu'une erreur est detectée avant d'effectuer une nouvelle tentative
+	 */
 	private static final int	WAIT_DELAY	= 3000;
 
+	/**
+	 * Constructeur par défault du CallHandler
+	 * Tentera de trouver le loadbalancer pour initialisation
+	 * @throws RemoteException
+	 * @throws NotBoundException
+	 * @throws JvnException
+	 */
 	public CallHandler() throws RemoteException, NotBoundException, JvnException {
 		this.rmiRegistry		= LocateRegistry.getRegistry(HOST);
 		this.jvnloadBalancer 	= (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
@@ -36,6 +66,10 @@ public class CallHandler implements JvnRemoteCoord{
 		}
 	}
 	
+	/**
+	 * Va tenter de récupérer la nouvelle adresse rmi du coordinateur ayant l'id id.
+	 * @param id id d'un coordinateur
+	 */
 	synchronized private void refreshCoord(int id) {
 		try {
 			Thread.sleep(WAIT_DELAY);

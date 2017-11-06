@@ -10,6 +10,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
+/**
+ * @author Paul Carretero
+ * Programme de test visant à vérifier la robustesse des coordinateurs en charges
+ * va effectuer un très grand nombre de requête en lecture/ecriture sur un objet
+ */
+@SuppressWarnings("javadoc")
 public class AutonomousTester {
 	
 	private static int iteration = 100;

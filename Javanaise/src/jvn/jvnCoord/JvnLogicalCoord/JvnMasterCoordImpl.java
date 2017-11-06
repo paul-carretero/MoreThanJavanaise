@@ -26,22 +26,68 @@ import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
+/**
+ * @author Paul Carretero
+ * Coordinateur Master
+ * Traite les demande des serveur javanaise client.
+ * Gère notamenent les demande de verrou, les terminaison de serveur etc.
+ * Envoie de requête de synchronisation asynchrone a un coordinateur slave afin de proposer une redondance
+ */
 public class JvnMasterCoordImpl extends JvnAbstractCoord {
 	
 	/**
 	 * serialVersionUID
 	 */
 	private static final long 		serialVersionUID = -618926970037788035L;
+	
+	/**
+	 * id de ce coordinateur master
+	 */
 	private final int 				id;
+	
+	/**
+	 * pool de thread en attente si le verrou en lecture n'est pas disponible 
+	 * afin de ne pas trop avantagé les lecteur
+	 */
 	private final Executor 			waitThreadPool;
 	
+	/**
+	 * Nombre de thread disponible sur la machine physique
+	 */
 	private static final int		numberOfThread	= Runtime.getRuntime().availableProcessors();
+	
+	/**
+	 * Tableau d'executor FIFO (newSingleThreadExecutor)
+	 * Permet la synchro avec le slave dans le même ordre que celui dont les reqûete sont traitée ici
+	 */
 	private final ExecutorService[] syncExecutors 	= new ExecutorService[numberOfThread];
+	
+	/**
+	 * délai avant un tentative de reconnection au slave/serveur client
+	 */
 	private static final int		TIMEOUT			= 3000;
 	
+	/**
+	 * Coordinateur slave sur le même id que ce coordinateur master
+	 */
 	private JvnRemoteCoordExtended 	slave;
+	
+	/**
+	 * Lock de synchronization
+	 * Permet d'éviter qu'une operation avec un serveur client soit en cours lorsque ce coordinateur 
+	 * sera détruit (pour être déplacer sur une autre machine physique)
+	 */
 	private final ReadWriteLock		syncLock;
 
+	/**
+	 * Constructeur par défault
+	 * Utilisé par les machine physique au démarrage pour créer un nouveau coordinateur master
+	 * Ne sera pas réutilisé par la suite
+	 * @param id id de ce coordinateur
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 * @throws JvnException
+	 */
 	public JvnMasterCoordImpl(int id) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.jvnObjects		= new JvnObjectMapCoord();
@@ -57,6 +103,17 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [NEW] [UP]");
 	}
 	
+	/**
+	 * Constructeur d'upgrade.
+	 * Sera utilisé par un slave afin de se terminé et de se relancer en temps que master
+	 * @param objectMap map des objets javanaise traité par le slave
+	 * @param objectLocks map des verrou associés aux objets javanaise du slave
+	 * @param waitingWriters Nombre de thread en attente de verrou en lecture pour chaque objet JVN
+	 * @param id id de ce coordinateur
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 * @throws JvnException
+	 */
 	public JvnMasterCoordImpl(JvnObjectMapCoord objectMap, Map<Integer,Lock> objectLocks, Map<Integer,AtomicInteger> waitingWriters, int id) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.waitThreadPool	= Executors.newCachedThreadPool();
@@ -74,13 +131,6 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		System.out.println("[COORDINATEUR] [MASTER] ["+this.id+"] [UPGRADE] [UP]");
 	}
 	
-	/**
-	 * Associate a symbolic name with a JVN object
-	 * @param jon : the JVN object name
-	 * @param jo  : the JVN object 
-	 * @param js  : the remote reference of the JVNServer
-	 * @throws java.rmi.RemoteException,JvnException
-	 **/
 	@Override
 	public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws RemoteException, JvnException{
 		this.syncLock.readLock().lock();
@@ -93,6 +143,10 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		this.syncLock.readLock().unlock();
 	}
 	
+	/**
+	 * met à jour le coordinateur slave associé à ce coordinateur master (si besoin)
+	 * @return l'adresse du slave de ce coordinateur master ou null si il n'existe pas
+	 */
 	synchronized public JvnRemoteCoordExtended updateSlave() {
 		try {
 			this.slave = ((JvnRemoteCoordExtended) this.rmiRegistry.lookup("JvnCoordSlave_"+ this.id));
@@ -107,6 +161,12 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		return this.slave;
 	}
 
+	/**
+	 * grâce à l'id de l'objet, la tache est repartie dans un des executor fifo.
+	 * Les operation sur un objets se feront donc dans l'ordre sur le slave
+	 * @param joi id d'un objet javanaise
+	 * @param r une tache (runnable) chargé de mettre à jour un objet javanaise
+	 */
 	private void slaveSynchronize(int joi, Runnable r) {
 		this.syncLock.readLock().lock();
 	    int h = (joi+42) % numberOfThread; // 42 => noise (double usage de "%")
@@ -114,6 +174,13 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 	    this.syncLock.readLock().unlock();
 	}
 	
+	/**
+	 * effectue le transfert de verrou vers le serveur client js
+	 * @param joi id d'un objet javanaise sur lequel la demande de verrou en lecture s'effectue
+	 * @param js le serveur client à l'origine de cette demande
+	 * @return l'objet applicatif
+	 * @throws JvnException
+	 */
 	public Serializable jvnLockReadHandler(int joi, JvnRemoteServer js) throws JvnException {
 		this.syncLock.readLock().lock();
 		this.objectLocks.get(joi).lock();
@@ -138,6 +205,13 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		return o;
 	}
 
+	/**
+	 * effectue le transfert de verrou vers le serveur client js
+	 * @param joi id d'un objet javanaise sur lequel la demande de verrou en ecriture s'effectue
+	 * @param js le serveur client à l'origine de cette demande
+	 * @return l'objet applicatif
+	 * @throws JvnException
+	 */
 	public Serializable jvnLockWriteHandler(int joi, JvnRemoteServer js) throws JvnException {
 		this.syncLock.readLock().lock();
 		this.objectLocks.get(joi).lock();
@@ -175,13 +249,6 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		return o;
 	}
 	
-	/**
-	 * Get a Read lock on a JVN object managed by a given JVN server 
-	 * @param joi : the JVN object identification
-	 * @param js  : the remote reference of the server
-	 * @return the current JVN object state
-	 * @throws java.rmi.RemoteException, JvnException
-	 **/
 	@Override
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws RemoteException, JvnException{
 		this.syncLock.readLock().lock();
@@ -201,13 +268,6 @@ public class JvnMasterCoordImpl extends JvnAbstractCoord {
 		return jvnLockReadHandler(joi,js);
 	}
 	
-	/**
-	 * Get a Write lock on a JVN object managed by a given JVN server 
-	 * @param joi : the JVN object identification
-	 * @param js  : the remote reference of the server
-	 * @return the current JVN object state
-	 * @throws java.rmi.RemoteException, JvnException
-	 **/
 	@Override
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
 		this.syncLock.readLock().lock();

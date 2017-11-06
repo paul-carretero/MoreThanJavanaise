@@ -51,6 +51,11 @@ public class JvnObjectImpl implements JvnObject {
 	 */
 	private transient volatile int lockAskedCount;
 
+	/**
+	 * constructeur par défault de l'objet javanaise à partir d'un id et de l'objet applicatif serializable
+	 * @param jvnObjectId un id unique
+	 * @param serializableObject un objet applicatif
+	 */
 	public JvnObjectImpl(int jvnObjectId, Serializable serializableObject) {
 		this.serializableObject	= serializableObject;
 		this.jvnObjectId 		= jvnObjectId;
@@ -60,7 +65,8 @@ public class JvnObjectImpl implements JvnObject {
 	}
 	
 	/**
-	 * @param in
+	 * permet d'initialiser les champs transient lors de la deserialization
+	 * @param in ObjectInputStream
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
@@ -75,6 +81,7 @@ public class JvnObjectImpl implements JvnObject {
 	 * utilisé pour les test
 	 * @return l'état courrant du verrou sur cet objet
 	 */
+	@Override
 	public LockState jvngetLock() {
 		return this.lock;
 

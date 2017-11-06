@@ -17,6 +17,7 @@ public interface JvnRemotePhysical extends Remote {
 	/**
 	 * demande à une JVM de lancer un LoadBalancer SLAVE 
 	 * (seul le master à la possibilité d'invoquer de nouvel instance)
+	 * @throws RemoteException 
 	 */
 	public void jvnNewSlaveLoadBalancer() throws RemoteException;
 

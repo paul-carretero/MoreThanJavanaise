@@ -8,6 +8,12 @@ import java.rmi.RemoteException;
 import jvn.jvnCoord.jvnPhysicalLayer.JvnRemotePhysical;
 import jvn.jvnExceptions.JvnException;
 
+/**
+ * @author Paul Carretero
+ * Loadbalancer slave
+ * recoit les mise à jour d'un loadbalancer master
+ * lors de la mort de celui ci, créer un nouveau loadbalancer master et se termine
+ */
 public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements Runnable{
 
 	/**
@@ -26,6 +32,7 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	private final JvnLoadBalancer master;
 
 	/**
+	 * Constructeur par défault
 	 * @throws RemoteException
 	 * @throws MalformedURLException
 	 * @throws JvnException
@@ -33,7 +40,8 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	 */
 	public JvnSlaveLoadBalancerImpl() throws RemoteException, MalformedURLException, JvnException, NotBoundException {
 		super();
-		this.master = (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
+		this.master			= (JvnLoadBalancer) this.rmiRegistry.lookup("JvnLoadBalancer");
+		this.currentOjectId	= this.master.jvnInitObjectId();
 		Naming.rebind(HOST_URL+"JvnLoadBalancerSlave", this);
 		(new Thread(this)).start();
 		System.out.println("[LOADBALANCER] [SLAVE]");
@@ -78,5 +86,10 @@ public class JvnSlaveLoadBalancerImpl extends JvnAbstractLoadBalancer implements
 	@Override
 	public void updateJvnCoordMap(JvnCoordMap jcm) throws RemoteException, JvnException {
 		this.coordMap = jcm;
+	}
+
+	@Override
+	public int jvnInitObjectId() throws RemoteException, JvnException {
+		throw new JvnException("Slave Loadbalancer");
 	}
 }

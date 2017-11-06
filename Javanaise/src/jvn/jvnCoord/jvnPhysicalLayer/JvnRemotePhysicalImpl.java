@@ -17,6 +17,12 @@ import jvn.jvnCoord.jvnLoadBalancer.JvnMasterLoadBalancerImpl;
 import jvn.jvnCoord.jvnLoadBalancer.JvnSlaveLoadBalancerImpl;
 import jvn.jvnExceptions.JvnException;
 
+/**
+ * @author Paul Carretero
+ * Machine physique
+ * Possède 0 ou 1 loadbalancer et 0 ou n coordinateur logique.
+ * Lance automatiquement un loadbalancer master ou slave si l'un ou l'autre n'est pas présent
+ */
 public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRemotePhysical{
 
 	/**
@@ -24,16 +30,36 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 	 */
 	private static final long	serialVersionUID	= -3473522236789019332L;
 
+	/**
+	 * managé comme un singleton
+	 */
 	private static JvnRemotePhysicalImpl 	jps;
 		
+	/**
+	 * registre rmi local
+	 */
 	private Registry 						rmiRegistry;
 	
+	/**
+	 * loadbalancer local, ou null si aucun
+	 */
 	private JvnAbstractLoadBalancer 		myLoadBalancer;
 	
+	/**
+	 * map des coordinateur slave lancé par cette machine (id => slave)
+	 */
 	private final Map<Integer,JvnSlaveCoordImpl> 	slaveCoords;
 	
+	/**
+	 * map des coordinateur master lancé par cette machine (id => master)
+	 */
 	private final Map<Integer,JvnMasterCoordImpl> 	masterCoords;
 
+	/**
+	 * Constructeur par default de la machine physique
+	 * initialise les loadbalancer si besoin et s'enregistre auprès du loadbalancer master
+	 * @throws RemoteException
+	 */
 	private JvnRemotePhysicalImpl() throws RemoteException {
 		super();
 		System.out.println("[PHYSICAL] ["+this.hashCode()+"]");
@@ -83,6 +109,10 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 		}
 	}
 	
+	/**
+	 * managé comme un singleton
+	 * @return l'instance local de la machine physique
+	 */
 	public static JvnRemotePhysicalImpl jvnGetLocalPhysical() {
 		if (jps == null){
 			try {
@@ -149,6 +179,11 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 		}
 	}
 	
+	@Override
+	public boolean isLoadBalancer() throws RemoteException {
+		return this.myLoadBalancer != null;
+	}
+	
 	// méthodes locales ////////////////////////////////////////////////////////
 	
 	/**
@@ -182,19 +217,4 @@ public class JvnRemotePhysicalImpl extends UnicastRemoteObject implements JvnRem
 			System.out.println("please ignore : " + e.getMessage());
 		}
 	}
-
-	/**
-	 * pour les tests seulement
-	 * @return l'id d'objet sur le loadBalancer de cette JVM
-	 * @throws JvnException 
-	 * @throws RemoteException 
-	 */
-	public int jvnGetObjectId() throws RemoteException, JvnException {
-		return this.myLoadBalancer.jvnGetObjectId();
-	}
-
-	@Override
-	public boolean isLoadBalancer() throws RemoteException {
-		return this.myLoadBalancer != null;
-	}	
 }

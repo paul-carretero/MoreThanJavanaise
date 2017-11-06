@@ -4,11 +4,25 @@ import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+/**
+ * @author Paul Carretero
+ * Objet de test proposant une queue que plusieurs application javanaise peuvent remplire mutuellement
+ */
 public class CollaborativeObject implements CollaborativeObjectItf{
 
+	/**
+	 * serialVersionUID
+	 */
 	private static final long serialVersionUID = -6646538978045156920L;
+	
+	/**
+	 * Queue sur laquelle plusieurs applications peuvent travailler
+	 */
 	private ArrayDeque<Integer> proofOfCollaboration;
 	
+	/**
+	 * Constructeur par défault, initialize une queue vide
+	 */
 	public CollaborativeObject() {
 		this.proofOfCollaboration = new ArrayDeque<Integer>();
 	}
@@ -27,7 +41,7 @@ public class CollaborativeObject implements CollaborativeObjectItf{
 	public int getLast() {
 		try {
 			return this.proofOfCollaboration.getLast();
-		} catch (NoSuchElementException e) {
+		} catch (@SuppressWarnings("unused") NoSuchElementException e) {
 			return 0;
 		}
 	}

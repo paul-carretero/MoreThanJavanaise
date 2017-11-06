@@ -17,6 +17,11 @@ import jvn.jvnExceptions.JvnException;
 import jvn.jvnObject.JvnObject;
 import jvn.jvnServer.JvnRemoteServer;
 
+/**
+ * @author Paul Carretero
+ * Base pour les coordinateurs master et slave.
+ * Offre certaines fonction de base communes, notament les représentation des objet contenu. 
+ */
 public abstract class JvnAbstractCoord extends UnicastRemoteObject implements JvnRemoteCoordExtended{
 	
 
@@ -24,18 +29,47 @@ public abstract class JvnAbstractCoord extends UnicastRemoteObject implements Jv
 	 * serialVersionUID
 	 */
 	protected static final long serialVersionUID 			 = -5906347883903342080L;
+	
+	/**
+	 * temps en milliseconde avant de mettre la demande de verrou 
+	 * en asynchrone avec callback (par exemple afin d'éviter un deadlock)
+	 */
 	protected static final int MAX_WAIT_TIME_BEFORE_QUEUEING = 20;
+	
+	/**
+	 * true si l'on doit également tenter de prendre un verrou pour les demande en lecture
+	 * Peut dégrader les performance légèrement
+	 */
 	protected static final boolean TRYLOCK_ON_READ			 = false;
+	
+	/**
+	 * host rmi
+	 */
 	protected static final String HOST 						 = "//localhost/";
 
+	/**
+	 * nombre de serveur en attente pour obtenir un verrou en ecriture par objet JVN
+	 */
 	protected Map<Integer,AtomicInteger>	waitingWriters;
+	
+	/**
+	 * Map assiant un verrou à chaque objet JVN
+	 */
 	protected Map<Integer,Lock> 			objectLocks;
 
 	/**
 	 * Ensemble Objets JVN stockés
 	 */
 	protected JvnObjectMapCoord jvnObjects;
+	
+	/**
+	 * reference vers le LoadBalancer (master)
+	 */
 	protected JvnLoadBalancer	jvnLoadBalancer;
+	
+	/**
+	 * registre rmi local
+	 */
 	protected final Registry	rmiRegistry;
 
 	/**

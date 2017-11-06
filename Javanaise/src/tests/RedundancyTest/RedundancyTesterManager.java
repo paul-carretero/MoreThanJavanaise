@@ -77,6 +77,7 @@ public class RedundancyTesterManager {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws NumberFormatException, JvnException, InterruptedException, IOException {
 		if(args[0].equals("manager")) {
 			new RedundancyTesterManager(Arrays.copyOfRange(args,1,args.length));

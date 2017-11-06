@@ -16,6 +16,11 @@ import jvn.proxy.JvnProxy;
 import tests.testObjects.StringObject;
 import tests.testObjects.StringObjectItf;
 
+/**
+ * @author Paul Carretero
+ * suite de test visant à vérifier le bon fonctionnement d'un serveur local et de son cache
+ */
+@SuppressWarnings("javadoc")
 public class JvnLocalServerTest implements Serializable{
 
 	private static final long serialVersionUID 		= -6778422767501106604L;
@@ -39,6 +44,7 @@ public class JvnLocalServerTest implements Serializable{
 		}
 	}
 
+	@SuppressWarnings("static-method")
 	@Test(timeout = 1000)
 	public void localBurnNotNull() throws JvnException {
 		for (Integer i = 0; i < ITERATION; i++) {
@@ -47,6 +53,7 @@ public class JvnLocalServerTest implements Serializable{
 		}
 	}
 
+	@SuppressWarnings("static-method")
 	@Test(timeout = 1000)
 	public void localBurnEqual() throws JvnException {
 		for (Integer i = 0; i < ITERATION; i++) {
@@ -55,6 +62,7 @@ public class JvnLocalServerTest implements Serializable{
 		}
 	}
 
+	@SuppressWarnings("static-method")
 	@Test(timeout = 1000)
 	public void localLRUCacheTest() throws JvnException {
 		long start;

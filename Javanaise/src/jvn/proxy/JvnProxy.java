@@ -96,6 +96,11 @@ public class JvnProxy implements InvocationHandler {
 		}
 	}
 
+	/**
+	 * Recherche et associe les référence vers d'autre objet javanaise de cet objet
+	 * Fonctionne grâce aux annotations
+	 * @param obj un objet applicatif
+	 */
 	private static void getReferencedJvnObject(final Serializable obj) {
 		for(Field field : obj.getClass().getDeclaredFields()){
 			Annotation[] annotations			= field.getDeclaredAnnotations();

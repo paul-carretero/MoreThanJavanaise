@@ -4,13 +4,20 @@ import java.lang.annotation.*;
 
 /**
  * @author Paul Carretero
- * Contrainte : le champs doit être public
+ * annotation permettant de spécifier un champs référencant un autre objet javanaise
+ * contrainte : ce champs doit être transient et public
  */
 @Retention(RetentionPolicy.RUNTIME)  
 @Target(ElementType.FIELD)  
 public @interface JvnReference {	
 	
-	String objectReference();
+	/**
+	 * @return le nom de l'objet applicatif référencé par ce field
+	 */
+	public String objectReference();
 	
-	Class<? extends Serializable> objectClass(); 
+	/**
+	 * @return la classe de l'objet applicatif référencé par ce field
+	 */
+	public Class<? extends Serializable> objectClass(); 
 } 

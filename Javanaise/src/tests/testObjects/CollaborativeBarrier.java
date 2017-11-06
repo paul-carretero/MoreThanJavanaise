@@ -1,10 +1,25 @@
 package tests.testObjects;
 
+/**
+ * @author Paul Carretero
+ * Objet de test permettant de manière simple de synchronizer plusieurs applications javanaise
+ */
 public class CollaborativeBarrier implements CollaborativeBarrierItf {
 	
+	/**
+	 * serialVersionUID
+	 */
 	private static final long serialVersionUID = -6196504744667282465L;
+	
+	/**
+	 * nombre total de participant
+	 */
 	private int i;
 
+	/**
+	 * Constructeur par défault
+	 * @param i nombre de participant
+	 */
 	public CollaborativeBarrier(int i) {
 		this.i = i;
 	}

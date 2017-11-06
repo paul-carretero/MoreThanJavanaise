@@ -11,6 +11,9 @@ import java.rmi.server.RMISocketFactory;
  */
 public class Shared {
 
+	/**
+	 * Délai avant une re-tentative de connexion
+	 */
 	protected static final int timeoutMillis = 3000;
 
 	/**
@@ -23,6 +26,11 @@ public class Shared {
 		//System.out.println("["+what+"] : "+msg);
 	}
 
+	/**
+	 * permet de définit un timeout pour les call RMI
+	 * retournera une RemoteExcption en cas de timeout (au lieu d'attendre parfois à l'infini)
+	 * @throws IOException
+	 */
 	public static void setRMITimeout() throws IOException {
 		RMISocketFactory.setSocketFactory(new RMISocketFactory(){
 			@Override
@@ -39,10 +47,3 @@ public class Shared {
 		}); 
 	}
 }
-
-
-/**
- * TODO
- * refactoring de jvn exception...
- * supprimé les synchros inutile...
- */

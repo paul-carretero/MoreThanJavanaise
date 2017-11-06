@@ -2,6 +2,12 @@ package tests.testObjects;
 
 import jvn.proxy.JvnReference;
 
+/**
+ * @author Paul Carretero
+ * Objet de test présentant des référence vers deux autre objet javanaise
+ * L'utilisation des annotation est illustrée ici
+ */
+@SuppressWarnings("javadoc")
 public class ReferenceObject implements ReferenceObjectItf {
 	
 	/**
@@ -35,9 +41,5 @@ public class ReferenceObject implements ReferenceObjectItf {
 	public int getId() {
 		return this.id;
 	}
-
-	
-
-	
 
 }

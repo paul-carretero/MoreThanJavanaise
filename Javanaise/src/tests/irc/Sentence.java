@@ -8,6 +8,11 @@
 
 package tests.irc;
 
+/**
+ * @author Paul Carretero
+ * objet applicatif représentant une chaine de caractère utilisé par irc
+ */
+@SuppressWarnings("javadoc")
 public class Sentence implements SentenceItf {
 
 	/**

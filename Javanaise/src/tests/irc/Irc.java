@@ -15,6 +15,11 @@ import jvn.jvnExceptions.JvnProxyException;
 import jvn.proxy.JvnProxy;
 
 
+/**
+ * Exemple d'application de chat
+ * @author Paul Carretero
+ */
+@SuppressWarnings("javadoc")
 public class Irc {
 	public final TextArea		text;
 	public final TextField		data;
@@ -26,6 +31,7 @@ public class Irc {
 	 * main method
 	 * create a JVN object nammed IRC for representing the Chat application
 	 **/
+	@SuppressWarnings("unused")
 	public static void main(String argv[]) {
 		try {
 			new Irc((SentenceItf) JvnProxy.getRemoteInstance(Sentence.class, "IRC"));
@@ -81,6 +87,7 @@ public class Irc {
 /**
  * Internal class to manage user events (read) on the CHAT application
  **/
+@SuppressWarnings("javadoc")
 class readListener implements ActionListener {
 	Irc irc;
 
@@ -126,6 +133,7 @@ class readListener implements ActionListener {
 /**
  * Internal class to manage user events (write) on the CHAT application
  **/
+@SuppressWarnings("javadoc")
 class writeListener implements ActionListener {
 	Irc irc;
 

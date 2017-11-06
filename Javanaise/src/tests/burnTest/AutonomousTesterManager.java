@@ -1,7 +1,5 @@
 package tests.burnTest;
 
-import java.net.MalformedURLException;
-import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Queue;
 import jvn.jvnExceptions.JvnException;
@@ -11,6 +9,12 @@ import tests.testObjects.CollaborativeBarrierItf;
 import tests.testObjects.CollaborativeObject;
 import tests.testObjects.CollaborativeObjectItf;
 
+/**
+ * @author Paul Carretero
+ * permet d'initier un burntest et de récupérer les valeurs pour vérification
+ * créer également des barrière de synchronisation
+ */
+@SuppressWarnings("javadoc")
 public class AutonomousTesterManager {
 
 	public AutonomousTesterManager(String[] args) throws NumberFormatException, JvnException, InterruptedException {
@@ -75,7 +79,8 @@ public class AutonomousTesterManager {
 		}
 	}
 
-	public static void main(String[] args) throws NumberFormatException, JvnException, InterruptedException, RemoteException, MalformedURLException {
+	@SuppressWarnings("unused")
+	public static void main(String[] args) throws NumberFormatException, JvnException, InterruptedException {
 		if(args[0].equals("manager")) {
 			new AutonomousTesterManager(Arrays.copyOfRange(args,1,args.length));
 		}

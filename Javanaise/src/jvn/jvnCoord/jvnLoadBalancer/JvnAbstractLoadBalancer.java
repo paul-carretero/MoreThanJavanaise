@@ -8,6 +8,10 @@ import java.rmi.server.UnicastRemoteObject;
 
 import jvn.jvnExceptions.JvnException;
 
+/**
+ * @author Paul Carretero
+ * Base de Loadbalancer permettant d'être étendu en loadbalancer slave ou master
+ */
 public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implements JvnLoadBalancer {
 
 	/**
@@ -49,6 +53,12 @@ public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implem
 	 */
 	protected int currentOjectId;
 
+	/**
+	 * Constructeur par défault de loadbalancer
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 * @throws JvnException
+	 */
 	public JvnAbstractLoadBalancer() throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.rmiRegistry 	= LocateRegistry.getRegistry();
@@ -56,6 +66,14 @@ public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implem
 		this.currentOjectId = 0;
 	}
 	
+	/**
+	 * Constructeur permettant d'initialiser un loadbalancer avec des données déjà existante (cas d'un upgrade)
+	 * @param CoordMap une représentation des coordinateurs
+	 * @param currentOjectId l'id d'objet courrant
+	 * @throws RemoteException
+	 * @throws MalformedURLException
+	 * @throws JvnException
+	 */
 	public JvnAbstractLoadBalancer(JvnCoordMap CoordMap, int currentOjectId) throws RemoteException, MalformedURLException, JvnException {
 		super();
 		this.rmiRegistry 	= LocateRegistry.getRegistry();
@@ -77,6 +95,6 @@ public abstract class JvnAbstractLoadBalancer extends UnicastRemoteObject implem
 	public void destroy() {
 		try {
 			UnicastRemoteObject.unexportObject(this,true);
-		} catch (Exception e) {}
+		} catch (@SuppressWarnings("unused") Exception e) {}
 	}
 }

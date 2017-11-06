@@ -19,6 +19,12 @@ import jvn.proxy.JvnProxy;
 import tests.testObjects.StringObject;
 import tests.testObjects.StringObjectItf;
 
+/**
+ * @author Paul Carretero
+ * Suite de test permettant de vérifier le bon comportement d'une transaction (sur plusieurs objets)
+ * Cette suite de test vérifie notament que les commits sont bien pris en compte ainsi que les rollback
+ */
+@SuppressWarnings("javadoc")
 public class JvnObjectTransactionTest {
 	
 	static StringObjectItf JvnObjectTest1;
@@ -84,7 +90,7 @@ public class JvnObjectTransactionTest {
 	}
 
 	@Test(timeout=10000)
-	public void localConcurrencyTest() throws JvnException {
+	public void localConcurrencyTest() {
 		List<Thread> runnableList = new LinkedList<Thread>();
 		for (int i = 0; i < NUM_THREAD; i++) {
 			runnableList.add(new JvnObjectWorker(i));
@@ -106,6 +112,7 @@ public class JvnObjectTransactionTest {
 		assertTrue("Chaine de taille conhérente", JvnObjectTest1.getS().length() > NUM_THREAD);
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test(timeout=10000)
 	public void commitedTransactionTest() throws JvnException {
 		JvnObjectTest1.setS("before-1");
@@ -122,6 +129,7 @@ public class JvnObjectTransactionTest {
 		assertEquals("commit verification", "after-3", JvnObjectTest3.getS());
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test(timeout=10000)
 	public void rollbackTransactionTest() throws JvnPreemptiveInvalidationException, JvnException {
 		JvnObjectTest1.setS("before-1");
@@ -144,6 +152,7 @@ public class JvnObjectTransactionTest {
 		assertEquals("commit verification", "before-3", JvnObjectTest3.getS());
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test(timeout=10000 , expected=JvnTransactionException.class)
 	public void failTransactionTest() throws JvnException {
 		JvnServerImpl.jvnGetServer().commitTransaction();

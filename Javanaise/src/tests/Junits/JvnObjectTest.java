@@ -17,6 +17,11 @@ import jvn.proxy.JvnProxy;
 import tests.testObjects.IntObject;
 import tests.testObjects.IntObjectItf;
 
+/**
+ * @author Paul Carretero
+ * Suite de test permettant de vérifier le bon fonctionnement des objets JVN, des annotations et services associés
+ */
+@SuppressWarnings("javadoc")
 public class JvnObjectTest implements Serializable{
 
 	private static final long serialVersionUID = -5016568459776507331L;
@@ -26,6 +31,7 @@ public class JvnObjectTest implements Serializable{
 		JvnServerImpl.jvnGetServer().jvnTerminate();
 	}
 
+	@SuppressWarnings("static-method")
 	@Test(timeout=1000)
 	public void localWriteReadAnnotedOKTest() throws IllegalArgumentException, JvnProxyException, JvnObjectNotFoundException, JvnException {
 		IntObjectItf o = ((IntObjectItf) JvnProxy.newInstance(new IntObject(), "42_Obj"));
@@ -38,6 +44,7 @@ public class JvnObjectTest implements Serializable{
 		assertEquals("verification du bon rechargement serveur", 4242, o.get());
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test(timeout=1000, expected=JvnObjectNotFoundException.class)
 	public void localWriteReadAnnotedFailTest() throws JvnObjectNotFoundException, JvnProxyException, IllegalArgumentException, JvnException {
 		JvnProxy.getRemoteInstance(IntObject.class, "notFound");
